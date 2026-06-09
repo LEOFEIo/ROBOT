@@ -3,414 +3,185 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Human-Robot Understanding Lab｜机器人理解人类交互空间</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>论文可视化实验室｜iOS 风格中文页面</title>
 <style>
 :root{
-  /* 极简深色主题 */
-  --bg: #000000;
-  --panel: rgba(20, 22, 26, 0.6);
-  --panel-hover: rgba(30, 33, 40, 0.8);
-  --text: #f0f0f0;
-  --muted: #8a8d93;
-  --faint: #3a3d45;
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.2);
-  
-  /* 科技强调色 */
-  --blue: #0071e3;
-  --cyan: #00f0ff;
-  --green: #00ff66;
-  --accent: #e2e2e2;
-  
-  /* 精密工业风的圆角与字体 */
-  --radius: 12px;
-  --radius-lg: 20px;
-  --shadow: 0 8px 32px rgba(0,0,0,0.6);
-  --font-sans: "Inter", "Noto Sans SC", -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --bg:#f5f5f7;
+  --card:rgba(255,255,255,.72);
+  --card-solid:#ffffff;
+  --text:#1d1d1f;
+  --muted:#6e6e73;
+  --line:rgba(0,0,0,.08);
+  --blue:#007aff;
+  --blue2:#5ac8fa;
+  --green:#34c759;
+  --orange:#ff9500;
+  --purple:#af52de;
+  --red:#ff3b30;
+  --radius:24px;
+  --radius-lg:36px;
+  --shadow:0 24px 70px rgba(0,0,0,.10);
+  --shadow-soft:0 12px 36px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.6;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(0,122,255,.18), transparent 34%),
+    radial-gradient(circle at 86% 12%, rgba(175,82,222,.14), transparent 36%),
+    linear-gradient(180deg,#fbfbfd 0%,var(--bg) 42%,#fff 100%);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
 }
-a{color:inherit;text-decoration:none}
+a{text-decoration:none;color:inherit}
 button,input,textarea,select{font:inherit}
-
-/* 数据网格背景 */
-.bg-grid{
-  position:fixed;inset:0;pointer-events:none;z-index:-1;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,0.8), rgba(0,0,0,0) 70%);
-}
-
-/* 玻璃拟态导航 */
+.noise{position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.45;background-image:linear-gradient(rgba(255,255,255,.55) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.55) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.72),transparent 78%)}
 nav{
-  position:fixed;top:0;left:0;right:0;height:64px;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 5vw;border-bottom:1px solid var(--line);
-  background:rgba(0,0,0,0.5);backdrop-filter:blur(24px) saturate(180%);
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(1120px,calc(100% - 28px));height:58px;z-index:50;
+  border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.64);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+  border-radius:999px;box-shadow:0 10px 36px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;padding:0 18px 0 22px;
 }
-.logo{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:0.02em}
-.logo-mark{width:28px;height:28px;background:#fff;display:grid;place-items:center;color:#000;font-family:var(--font-mono);font-weight:700;font-size:14px;border-radius:4px}
-.nav-links{display:flex;gap:32px;list-style:none;color:var(--muted);font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
-.nav-links a:hover{color:white}
-.nav-cta{font-size:12px;font-family:var(--font-mono);color:#000;background:var(--cyan);padding:8px 16px;border-radius:4px;font-weight:700;text-transform:uppercase;}
-
-.section{padding:120px 5vw}
-.container{max-width:1240px;margin:0 auto}
-
-/* Hero 区域 */
-.hero{min-height:100vh;display:grid;place-items:center;padding:120px 5vw 72px;position:relative}
-.hero-layout{max-width:1240px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-.eyebrow{color:var(--cyan);font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.eyebrow::before{content:'';display:block;width:8px;height:8px;background:var(--cyan)}
-h1{font-size:clamp(40px,6.5vw,86px);line-height:1.05;letter-spacing:-0.04em;margin-bottom:24px;font-weight:600}
-.gradient-text{color:#fff} /* 移除花哨渐变，改为纯白 */
-.hero-sub{font-size:clamp(16px,1.5vw,20px);color:var(--muted);max-width:600px;margin-bottom:40px;font-weight:400}
-.hero-actions{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:40px}
-
-/* 按钮 - 锐利边缘 */
-.btn{border:1px solid var(--line-strong);border-radius:6px;padding:14px 24px;background:transparent;color:#fff;font-weight:500;font-size:14px;cursor:pointer;transition:all 0.2s;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.05em}
-.btn:hover{background:var(--line);border-color:#fff}
-.btn.primary{background:#fff;color:#000;border-color:#fff;}
-.btn.primary:hover{background:var(--accent);transform:translateY(-2px)}
-
-/* 元数据标签 */
-.meta-row{display:flex;gap:12px;flex-wrap:wrap}
-.meta{border-left:2px solid var(--cyan);background:var(--panel);padding:12px 16px;color:var(--muted);font-size:12px;font-family:var(--font-mono)}
-.meta strong{color:#fff;font-size:14px;display:block;margin-bottom:4px;font-family:var(--font-sans)}
-
-/* 机器人展示台 - 极简工业感 */
-.robot-stage{border:1px solid var(--line);border-radius:var(--radius-lg);min-height:580px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 50%, rgba(0,240,255,0.05), transparent 60%), var(--panel);backdrop-filter:blur(20px)}
-.robot-svg{position:absolute;inset:15% 10% auto;width:80%;height:auto;filter:drop-shadow(0 20px 40px rgba(0,0,0,0.8))}
-
-/* 气泡框 - HUD 风格 */
-.bubble{position:absolute;border:1px solid var(--line);background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);border-radius:6px;padding:16px;box-shadow:var(--shadow);border-left:3px solid var(--cyan)}
-.bubble b{display:block;font-size:12px;margin-bottom:6px;font-family:var(--font-mono);color:#fff;text-transform:uppercase}
-.bubble span{font-size:13px;color:var(--muted)}
-.b1{left:30px;top:40px;width:220px}.b2{right:30px;top:140px;width:200px}.b3{left:40px;bottom:40px;width:230px}.b4{right:40px;bottom:60px;width:220px}
-.pulse{display:inline-block;width:6px;height:6px;background:var(--cyan);box-shadow:0 0 12px var(--cyan);margin-right:8px;animation:blink 2s infinite}
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-/* 通用头部 */
-.header{max-width:820px;margin-bottom:64px}
-.header h2{font-size:clamp(30px,4vw,56px);line-height:1.1;letter-spacing:-0.03em;margin-bottom:16px;font-weight:600}
-.header p{color:var(--muted);font-size:16px}
-
-/* 卡片系统 */
-.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:32px;transition:all 0.3s}
-.card:hover{border-color:var(--line-strong);background:var(--panel-hover)}
-.card-icon{width:40px;height:40px;display:grid;place-items:center;margin-bottom:24px;font-size:20px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,0.03)}
-.card small{color:var(--cyan);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:8px}
-.card h3{font-size:22px;letter-spacing:-0.02em;margin-bottom:12px}
-.card p,.card li{color:var(--muted);font-size:14px}
-.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
-.tag{border:1px solid var(--line);border-radius:4px;padding:4px 10px;color:var(--muted);font-family:var(--font-mono);font-size:11px;background:rgba(0,0,0,0.3)}
-
-/* 飞轮模型区 */
-.flywheel{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
-.fly-left{border-radius:var(--radius-lg);border:1px solid var(--line);padding:32px;background:var(--panel);position:relative;overflow:hidden;min-height:540px}
-.fly-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;display:grid;place-items:center;text-align:center;border:1px dashed var(--line-strong);background:rgba(0,0,0,0.5)}
-.fly-center strong{font-size:20px;letter-spacing:0.05em;font-weight:600}
-.fly-item{position:absolute;width:180px;border-left:2px solid var(--cyan);background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);padding:14px}
-.fly-item b{font-size:13px;font-family:var(--font-mono);color:#fff}.fly-item p{color:var(--muted);font-size:12px;margin-top:6px}
-.f1{left:30px;top:40px}.f2{right:30px;top:80px}.f3{right:30px;bottom:70px}.f4{left:40px;bottom:60px}
-.fly-right{display:grid;gap:16px}
-.model-row{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:24px;display:grid;grid-template-columns:60px 1fr;gap:20px;align-items:start}
-.model-num{width:48px;height:48px;border-radius:6px;background:rgba(255,255,255,0.05);display:grid;place-items:center;color:var(--text);font-family:var(--font-mono);font-size:18px;font-weight:700}
-.model-row h3{font-size:18px;margin-bottom:8px}.model-row p{color:var(--muted);font-size:14px}
-
-/* 实验室模拟器 */
-.lab-shell{display:grid;grid-template-columns:320px 1fr;gap:20px}
-.panel{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);backdrop-filter:blur(20px);padding:24px;position:relative}
-/* 科技角标 */
-.tech-corners::before, .tech-corners::after{content:'';position:absolute;width:12px;height:12px;border:2px solid var(--cyan);opacity:0.5;pointer-events:none}
-.tech-corners::before{top:0;left:0;border-right:none;border-bottom:none;border-top-left-radius:var(--radius-lg)}
-.tech-corners::after{bottom:0;right:0;border-left:none;border-top:none;border-bottom-right-radius:var(--radius-lg)}
-
-.scenario-btn{width:100%;border:1px solid transparent;border-bottom:1px solid var(--line);background:transparent;color:var(--muted);text-align:left;padding:16px 12px;cursor:pointer;transition:all 0.2s}
-.scenario-btn strong{display:block;color:inherit;margin-bottom:6px;font-size:15px}.scenario-btn span{font-size:13px}
-.scenario-btn.active,.scenario-btn:hover{background:rgba(255,255,255,0.03);border-left:2px solid var(--cyan);color:#fff}
-
-.sim{min-height:640px;position:relative;overflow:hidden}
-.space-map{position:absolute;inset:24px 24px 220px;border-radius:var(--radius);border:1px solid var(--line-strong);background:rgba(0,0,0,0.4);overflow:hidden}
-.space-map:before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:30px 30px;opacity:0.3}
-.zone{position:absolute;border:1px dashed var(--line-strong);display:grid;place-items:center;color:var(--faint);font-family:var(--font-mono);font-size:11px;text-transform:uppercase}
-.robot-dot{position:absolute;width:24px;height:24px;border:2px solid var(--cyan);background:#000;z-index:5;display:grid;place-items:center;box-shadow:0 0 20px var(--cyan);transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1);border-radius:4px}
-.robot-dot::after{content:'';width:6px;height:6px;background:var(--cyan);display:block}
-.user-dot{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--muted);z-index:4;box-shadow:0 0 0 4px rgba(255,255,255,0.05)}
-.u1{left:70%;top:34%}.u2{left:38%;top:42%}.u3{left:58%;top:70%}
-.path{position:absolute;height:1px;left:22%;top:62%;width:260px;background:var(--cyan);z-index:3;transform-origin:left center;transition:0.5s;opacity:0.5}
-
-.dialogue{position:absolute;left:24px;right:24px;bottom:24px;border-radius:var(--radius);border:1px solid var(--line);background:var(--bg);padding:24px;display:grid;grid-template-columns:1fr 280px;gap:24px}
-.dialogue small{color:var(--cyan);font-family:var(--font-mono);font-size:11px;text-transform:uppercase}
-.dialogue h3{font-size:24px;margin:8px 0 12px;font-weight:500}
-.dialogue p{color:var(--muted);font-size:14px}
-.understanding{border-left:1px solid var(--line);padding-left:24px}
-.score{font-family:var(--font-mono);font-size:36px;font-weight:700;line-height:1;color:#fff}
-.bar{height:4px;background:var(--line);margin:12px 0;border-radius:2px}
-.bar span{display:block;height:100%;width:62%;background:var(--cyan);transition:0.4s}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.chip{font-family:var(--font-mono);font-size:11px;color:#000;background:#fff;padding:4px 8px;border-radius:2px}
-
-/* 表单与共创 */
-.co-create{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.formbox label{display:block;color:var(--muted);font-family:var(--font-mono);font-size:12px;text-transform:uppercase;margin:20px 0 8px}
-.formbox input,.formbox textarea,.formbox select{width:100%;border:1px solid var(--line);background:rgba(0,0,0,0.3);color:white;padding:14px;border-radius:6px;outline:none;font-family:var(--font-sans);font-size:14px;transition:border 0.2s}
-.formbox textarea{min-height:120px;resize:vertical}
-.formbox input:focus,.formbox textarea:focus,.formbox select:focus{border-color:var(--cyan)}
-.output-card{display:flex;flex-direction:column}
-.memory-list{display:grid;gap:12px;margin-top:24px}
-.memory-item{border-left:2px solid var(--line-strong);padding:12px 16px;background:rgba(255,255,255,0.02);color:var(--muted);font-size:13px}
-.memory-item b{color:#fff}
-.radar{margin-top:auto;border:1px solid var(--line);padding:24px;background:rgba(0,0,0,0.3);border-radius:var(--radius)}
-.radar-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.radar-stat{border-bottom:1px solid var(--line);padding-bottom:12px}
-.radar-stat strong{font-family:var(--font-mono);font-size:24px;color:#fff;display:block}
-.radar-stat span{color:var(--muted);font-size:12px;text-transform:uppercase}
-
-/* 功能面板 (V2 Expansion) */
-.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.function-panel{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);padding:32px;}
-.pill-btn{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 16px;font-size:13px;cursor:pointer;transition:all 0.2s;border-radius:4px}
-.pill-btn:hover,.pill-btn.active{color:#000;background:#fff;border-color:#fff}
-.segment-row,.mood-row,.need-row,.feedback-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 24px}
-.robot-chat{display:grid;gap:16px;margin-top:24px;max-height:360px;overflow:auto;padding-right:8px}
-.chat-line{display:flex;gap:12px;align-items:flex-start}
-.chat-avatar{width:32px;height:32px;border:1px solid var(--line-strong);display:grid;place-items:center;flex:0 0 auto;font-family:var(--font-mono);font-size:12px;background:#000}
-.chat-bubble{border:1px solid var(--line);background:rgba(255,255,255,0.03);padding:14px 16px;color:var(--muted);font-size:14px;border-radius:0 8px 8px 8px}
-.chat-line.user{flex-direction:row-reverse}
-.chat-line.user .chat-bubble{color:#fff;background:var(--line);border-radius:8px 0 8px 8px}
-.ai-output{border:1px solid var(--line);border-left:3px solid var(--cyan);background:rgba(0,0,0,0.5);padding:20px;margin-top:20px;font-size:14px}
-.ai-output h4{color:#fff;font-family:var(--font-mono);font-size:13px;margin-bottom:12px;text-transform:uppercase}
-.ai-output ul{padding-left:20px;color:var(--muted)}
-.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
-.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.dash-card{border:1px solid var(--line);padding:24px;background:var(--panel);border-radius:var(--radius)}
-.dash-card strong{font-family:var(--font-mono);font-size:32px;color:#fff;display:block}
-.dash-card small{font-family:var(--font-mono);font-size:11px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;display:block}
-.dash-card span{font-size:13px;color:var(--muted);margin-top:8px;display:block}
-
-/* 交互热点地图 */
-.canvas-map{height:400px;border:1px solid var(--line);background:rgba(0,0,0,0.5);position:relative;overflow:hidden;margin-top:24px;border-radius:var(--radius)}
-.canvas-map:before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:40px 40px;opacity:0.3}
-.touchpoint{position:absolute;border:1px solid var(--line-strong);padding:10px 14px;background:var(--bg);color:#fff;font-size:13px;cursor:pointer;transition:all 0.2s;border-radius:4px}
-.touchpoint:hover,.touchpoint.active{background:#fff;color:#000}
-.touchpoint small{display:block;opacity:0.6;font-size:11px;margin-top:4px}
-.tp1{left:10%;top:15%}.tp2{right:15%;top:20%}.tp3{left:20%;bottom:20%}.tp4{right:20%;bottom:15%}.tp5{left:45%;top:45%}
-
-.report-box{border:1px solid var(--line);background:rgba(0,0,0,0.4);padding:24px;font-family:var(--font-mono);font-size:13px;color:var(--muted);white-space:pre-wrap;border-radius:var(--radius)}
-.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(100px);z-index:200;border:1px solid var(--line);background:#fff;color:#000;padding:12px 24px;font-family:var(--font-mono);font-size:12px;text-transform:uppercase;font-weight:700;transition:0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);opacity:0}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-
-.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.step{border-top:2px solid var(--cyan);padding:24px 0}
-.step h3{font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
-.step h3::before{content:attr(data-step);font-family:var(--font-mono);color:var(--muted);font-size:14px}
-.step p{color:var(--muted);font-size:14px}
-
-.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.contact{padding:140px 5vw;text-align:center}
-.contact h2{font-size:clamp(36px,5vw,64px);line-height:1.1;letter-spacing:-0.03em;margin-bottom:24px;font-weight:600}
-.contact p{color:var(--muted);max-width:600px;margin:0 auto 40px;font-size:16px}
-.footer{border-top:1px solid var(--line);padding:32px 5vw;color:var(--faint);font-family:var(--font-mono);font-size:12px;text-align:center;text-transform:uppercase}
-
-@media(max-width:980px){
-  .hero-layout,.flywheel,.lab-shell,.co-create,.about-layout,.feature-grid{grid-template-columns:1fr}
-  .card-grid,.process-grid,.dash-grid{grid-template-columns:1fr 1fr}
-  .dialogue{grid-template-columns:1fr}
-  .understanding{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:20px}
-  .nav-links{display:none}
-}
-@media(max-width:640px){
-  .card-grid,.process-grid,.dash-grid{grid-template-columns:1fr}
-  h1{font-size:42px}
-  .robot-svg{position:relative;margin:40px 10%;width:80%;inset:auto}
-  .b1,.b2,.b3,.b4{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;margin:12px}
-}
+.logo{display:flex;align-items:center;gap:10px;font-weight:750;letter-spacing:-.02em}
+.logo-mark{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--purple));display:grid;place-items:center;color:white;font-weight:800;box-shadow:0 10px 22px rgba(0,122,255,.25)}
+.nav-links{display:flex;gap:22px;list-style:none;color:var(--muted);font-size:13px;font-weight:600}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--text);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 10px 28px rgba(0,0,0,.15)}
+.section{padding:108px 24px}.container{max-width:1120px;margin:0 auto}
+.hero{min-height:100vh;padding:130px 24px 72px;display:grid;place-items:center}.hero-grid{max-width:1120px;width:100%;display:grid;grid-template-columns:1.02fr .98fr;gap:28px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--blue);font-size:13px;font-weight:750;margin-bottom:16px}.eyebrow:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 6px rgba(0,122,255,.12)}
+h1{font-size:clamp(44px,6.5vw,82px);line-height:1.03;letter-spacing:-.065em;font-weight:800;margin-bottom:22px}.gradient{background:linear-gradient(90deg,#1d1d1f,#007aff 45%,#af52de);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{font-size:clamp(17px,2vw,21px);color:var(--muted);max-width:650px;margin-bottom:30px;font-weight:400}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{border:0;border-radius:999px;padding:13px 20px;cursor:pointer;font-weight:750;font-size:15px;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.primary{background:var(--blue);color:#fff;box-shadow:0 16px 35px rgba(0,122,255,.27)}.btn.dark{background:var(--text);color:#fff}.btn.ghost{background:rgba(255,255,255,.75);border:1px solid var(--line);color:var(--text)}.btn:hover{transform:translateY(-2px)}
+.hero-card{position:relative;border:1px solid rgba(255,255,255,.72);background:rgba(255,255,255,.58);backdrop-filter:blur(28px) saturate(180%);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:22px;overflow:hidden}.hero-card:before{content:"";position:absolute;inset:-1px;background:radial-gradient(circle at 32% 0%,rgba(0,122,255,.22),transparent 42%);pointer-events:none}.phone{position:relative;min-height:560px;border-radius:34px;background:#111;border:8px solid #202124;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 28px 70px rgba(0,0,0,.22);overflow:hidden}.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#050505;border-radius:999px;z-index:3}.phone-screen{position:absolute;inset:0;background:linear-gradient(180deg,#fdfdfd,#f2f4f8);padding:60px 18px 18px}.mini-title{font-weight:800;font-size:26px;letter-spacing:-.05em;margin-bottom:6px}.mini-sub{font-size:13px;color:var(--muted);margin-bottom:18px}.mini-card{border-radius:22px;background:#fff;box-shadow:0 12px 28px rgba(0,0,0,.08);padding:16px;margin-bottom:12px}.mini-line{height:9px;border-radius:99px;background:#e8e8ed;margin:8px 0}.mini-line.blue{width:72%;background:linear-gradient(90deg,var(--blue),var(--blue2))}.mini-line.purple{width:56%;background:linear-gradient(90deg,var(--purple),#ff9ff3)}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mini-pill{border-radius:18px;background:#f5f5f7;padding:14px;font-size:12px;color:var(--muted)}.float{position:absolute;z-index:4;border-radius:22px;background:rgba(255,255,255,.84);backdrop-filter:blur(18px);box-shadow:var(--shadow-soft);border:1px solid rgba(255,255,255,.7);padding:14px 16px;font-size:13px;color:var(--muted)}.float b{display:block;color:var(--text);font-size:14px;margin-bottom:2px}.f1{top:56px;left:2px}.f2{right:2px;top:200px}.f3{bottom:64px;left:18px}
+.header{margin-bottom:36px;max-width:780px}.header h2{font-size:clamp(32px,4vw,56px);line-height:1.08;letter-spacing:-.05em;margin-bottom:14px}.header p{color:var(--muted);font-size:17px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:var(--card);backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,.72);border-radius:var(--radius);box-shadow:var(--shadow-soft);padding:24px}.card:hover{transform:translateY(-3px);transition:.2s}.icon{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;color:#fff;font-size:21px;margin-bottom:18px}.blue{background:linear-gradient(135deg,var(--blue),var(--blue2))}.green{background:linear-gradient(135deg,var(--green),#30d158)}.purple{background:linear-gradient(135deg,var(--purple),#ff2d55)}.orange{background:linear-gradient(135deg,var(--orange),#ffcc00)}.card h3{font-size:21px;letter-spacing:-.03em;margin-bottom:8px}.card p,.card li{color:var(--muted);font-size:14px}.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.tag{font-size:12px;border-radius:999px;background:#f2f2f7;color:#515154;padding:5px 10px;font-weight:650}
+.app{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}.panel{background:rgba(255,255,255,.72);backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.78);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);padding:22px}.upload{border:2px dashed rgba(0,122,255,.25);border-radius:26px;background:linear-gradient(180deg,rgba(0,122,255,.06),rgba(255,255,255,.44));padding:26px;text-align:center;cursor:pointer;margin-bottom:16px}.upload:hover{border-color:var(--blue)}.upload input{display:none}.upload-icon{width:60px;height:60px;margin:0 auto 12px;border-radius:20px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:28px;box-shadow:0 16px 34px rgba(0,122,255,.25)}.helper{font-size:13px;color:var(--muted);margin-top:6px}.field{margin-top:14px}.field label{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px}.field textarea,.field input{width:100%;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72);padding:14px 15px;outline:none;color:var(--text)}.field textarea{min-height:150px;resize:vertical}.field textarea:focus,.field input:focus{border-color:rgba(0,122,255,.45);box-shadow:0 0 0 4px rgba(0,122,255,.1)}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.results{display:grid;gap:18px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#fff;border-radius:22px;padding:18px;box-shadow:0 8px 22px rgba(0,0,0,.05)}.stat strong{font-size:28px;letter-spacing:-.04em;display:block}.stat span{font-size:12px;color:var(--muted);font-weight:700}.visual-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.viz-card{background:#fff;border-radius:28px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.06);overflow:hidden}.viz-card.large{grid-column:1/-1}.viz-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.viz-head h3{font-size:20px;letter-spacing:-.03em}.badge{font-size:12px;color:var(--blue);font-weight:800;background:rgba(0,122,255,.1);padding:5px 10px;border-radius:999px}.chapter-list{display:grid;gap:10px}.chapter{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:16px;background:#f5f5f7}.chapter-num{width:34px;height:34px;border-radius:12px;background:#fff;display:grid;place-items:center;font-weight:800;color:var(--blue)}.chapter small{color:var(--muted)}.bar-row{display:grid;grid-template-columns:88px 1fr 42px;gap:10px;align-items:center;margin:12px 0;font-size:13px;color:var(--muted)}.bar-track{height:10px;border-radius:999px;background:#f2f2f7;overflow:hidden}.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--purple));width:0%;transition:.45s}.map{min-height:310px;position:relative;border-radius:22px;background:radial-gradient(circle at 50% 50%,rgba(0,122,255,.1),transparent 34%),#f7f8fb;overflow:hidden}.node{position:absolute;border-radius:999px;padding:9px 13px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.08);font-size:13px;font-weight:800;white-space:nowrap}.node.main{left:50%;top:50%;transform:translate(-50%,-50%);background:var(--text);color:#fff;font-size:15px}.link{position:absolute;height:2px;background:rgba(0,122,255,.18);transform-origin:left center}.path-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.step-pill{display:flex;align-items:center;gap:8px;background:#f5f5f7;border-radius:999px;padding:10px 12px;color:#515154;font-size:13px;font-weight:700}.arrow{color:#c7c7cc}.abstract-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.abstract-card{border-radius:20px;background:#f5f5f7;padding:16px}.abstract-card b{display:block;margin-bottom:6px}.abstract-card p{font-size:13px;color:var(--muted)}.report{white-space:pre-wrap;background:#f5f5f7;border-radius:22px;padding:18px;color:#515154;font-size:14px;min-height:180px}.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(100px);background:rgba(28,28,30,.88);color:white;backdrop-filter:blur(18px);padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;box-shadow:0 18px 44px rgba(0,0,0,.18);transition:.25s;z-index:99}.toast.show{transform:translateX(-50%) translateY(0)}
+.footer{padding:42px 24px;text-align:center;color:var(--muted);font-size:13px}.hidden{display:none!important}
+@media(max-width:980px){.hero-grid,.app,.visual-grid{grid-template-columns:1fr}.grid-3,.summary,.abstract-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}.phone{min-height:460px}}
+@media(max-width:620px){.grid-3,.summary,.abstract-grid{grid-template-columns:1fr}nav{top:10px}.section{padding:82px 16px}.hero{padding:110px 16px 50px}.logo span:last-child{display:none}.hero-card{padding:12px}.float{display:none}}
 </style>
 </head>
 <body>
-<div class="bg-grid"></div>
+<div class="noise"></div>
 <nav>
-  <a class="logo" href="#top"><span class="logo-mark">R</span><span>HUMAN-ROBOT LAB</span></a>
+  <a class="logo" href="#top"><span class="logo-mark">P</span><span>论文可视化实验室</span></a>
   <ul class="nav-links">
-    <li><a href="#model">Model</a></li>
-    <li><a href="#lab">Lab</a></li>
-    <li><a href="#cocreate">Co-create</a></li>
-    <li><a href="#functions">System</a></li>
+    <li><a href="#features">功能</a></li>
+    <li><a href="#app">上传读取</a></li>
+    <li><a href="#visual">可视化</a></li>
+    <li><a href="#report">报告</a></li>
   </ul>
-  <a class="nav-cta" href="#cocreate">Init Sequence</a>
+  <a class="nav-cta" href="#app">开始分析</a>
 </nav>
 
 <header class="hero" id="top">
-  <div class="hero-layout">
+  <div class="hero-grid">
     <div>
-      <div class="eyebrow">Interactive Space Architechture</div>
-      <h1>让机器人<br><span class="gradient-text">真正理解人</span></h1>
-      <p class="hero-sub">把网站从“作品集展示”升级为极简的“人机交互共创中枢”：捕捉行为偏好与真实需求，赋能机器人的场景理解力与决策逻辑。</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="#lab">进入实验室</a>
-        <a class="btn" href="#model">系统模型</a>
-      </div>
-      <div class="meta-row">
-        <div class="meta"><strong>Hardware Free</strong>聚焦数据与场景</div>
-        <div class="meta"><strong>Open Source</strong>人人参与逻辑共创</div>
+      <div class="eyebrow">中文 · iOS · 论文智能阅读</div>
+      <h1>把论文<br><span class="gradient">变成可视化知识地图</span></h1>
+      <p class="hero-sub">上传自己的论文、开题报告或他人的文献，系统会读取文本，自动生成论文结构、关键词图谱、研究路径、摘要卡片与答辩展示报告。</p>
+      <div class="actions">
+        <a class="btn primary" href="#app">上传论文</a>
+        <a class="btn ghost" href="#features">查看功能</a>
       </div>
     </div>
-    <div class="robot-stage tech-corners" aria-label="极简核心传感器视觉">
-      <svg class="robot-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
-            <stop stop-color="#1a1a1c"/><stop offset="1" stop-color="#0a0a0c"/>
-          </linearGradient>
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-        <rect x="80" y="60" width="240" height="280" rx="30" fill="url(#metal)" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
-        <rect x="100" y="100" width="200" height="100" rx="16" fill="#000" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-        <rect x="140" y="146" width="120" height="4" rx="2" fill="var(--cyan)" filter="url(#glow)"/>
-        <circle cx="200" cy="148" r="8" fill="#fff" filter="url(#glow)"/>
-        <line x1="160" y1="240" x2="240" y2="240" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-        <line x1="170" y1="260" x2="230" y2="260" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-        <circle cx="200" cy="290" r="4" fill="rgba(255,255,255,0.2)"/>
-      </svg>
-      <div class="bubble b1"><b>[ DATA.INTENT ]</b><span>“我不是想问路线，我是有点迷路和焦虑。”</span></div>
-      <div class="bubble b2"><b>[ SYS.CONTEXT ]</b><span>地点、时间、人群、任务多维注入模型。</span></div>
-      <div class="bubble b3"><b>[ LOG.FEEDBACK ]</b><span>点击、停留、评价转化为体验锚点。</span></div>
-      <div class="bubble b4"><b>[ OUT.EVOLUTION ]</b><span>跨越问答边界，向同理心与边界服务进化。</span></div>
+    <div class="hero-card">
+      <div class="phone">
+        <div class="island"></div>
+        <div class="phone-screen">
+          <div class="mini-title">论文洞察</div>
+          <div class="mini-sub">已生成研究框架、关键词与方法路径</div>
+          <div class="mini-card">
+            <b>研究主题</b>
+            <div class="mini-line blue"></div><div class="mini-line"></div><div class="mini-line purple"></div>
+          </div>
+          <div class="mini-grid">
+            <div class="mini-pill"><b>结构图</b><br>7 个章节节点</div>
+            <div class="mini-pill"><b>关键词</b><br>12 个核心概念</div>
+            <div class="mini-pill"><b>方法路径</b><br>6 步研究流程</div>
+            <div class="mini-pill"><b>可导出</b><br>答辩/作品集文案</div>
+          </div>
+        </div>
+      </div>
+      <div class="float f1"><b>自动读取</b>标题、摘要、关键词、章节</div>
+      <div class="float f2"><b>视觉生成</b>结构图、词频图、知识图谱</div>
+      <div class="float f3"><b>适合答辩</b>一键生成项目说明</div>
     </div>
   </div>
 </header>
 
-<section class="section" id="value">
+<section class="section" id="features">
   <div class="container">
     <div class="header">
-      <div class="eyebrow">Core Architecture</div>
-      <h2>机器人理解系统的入口枢纽</h2>
-      <p>剥离冗余的装饰，重构为一个全景式的交互试验场。精准采集反馈，沉淀服务法则。</p>
+      <div class="eyebrow">核心功能</div>
+      <h2>不是简单总结，而是把论文逻辑视觉化</h2>
+      <p>页面全部改为中文，并采用 iOS 式毛玻璃、圆角卡片、浅色系统界面和移动端友好的阅读体验。</p>
     </div>
-    <div class="card-grid">
-      <div class="card"><div class="card-icon">◇</div><small>Scene First</small><h3>高频场景锚定</h3><p>聚焦博物馆、校园、企业园区，将系统置入真实的物理人流与任务切片中。</p><div class="tags"><span class="tag">GUIDE</span><span class="tag">CONSULT</span></div></div>
-      <div class="card"><div class="card-icon">◎</div><small>Human Data</small><h3>个体行为采样</h3><p>捕获身份、情绪与评价，帮助算法建立对多维人类表达方式的深层映射。</p><div class="tags"><span class="tag">INTENT</span><span class="tag">EMOTION</span></div></div>
-      <div class="card"><div class="card-icon">⟳</div><small>Business Loop</small><h3>数据飞轮效应</h3><p>交互频次驱动需求洞察，以高精度颗粒度反哺空间运营方与机器人开发商。</p><div class="tags"><span class="tag">OPTIMIZE</span><span class="tag">REPORT</span></div></div>
+    <div class="grid-3">
+      <div class="card"><div class="icon blue">⌁</div><h3>论文上传读取</h3><p>支持上传 TXT / MD / HTML 等可读取文本，也可以直接粘贴 Word 或 PDF 中复制出的论文内容。</p><div class="tags"><span class="tag">标题识别</span><span class="tag">摘要识别</span></div></div>
+      <div class="card"><div class="icon green">◎</div><h3>知识图谱生成</h3><p>自动提取高频关键词，并以节点关系图展示论文主题与概念之间的联系。</p><div class="tags"><span class="tag">关键词</span><span class="tag">关系网络</span></div></div>
+      <div class="card"><div class="icon purple">▦</div><h3>结构路径分析</h3><p>根据章节标题、研究方法和关键词，生成论文框架图、方法路径图与摘要卡片。</p><div class="tags"><span class="tag">研究框架</span><span class="tag">方法流程</span></div></div>
     </div>
   </div>
 </section>
 
-<section class="section model" id="model">
+<section class="section" id="app">
   <div class="container">
     <div class="header">
-      <div class="eyebrow">Business Logic</div>
-      <h2>模式设计：交互数据共创中枢</h2>
-      <p>摆脱硬件依赖，转型为连接物理空间与 AI 算法的“场景架构 + 数据采集”轻量级连接器。</p>
+      <div class="eyebrow">上传读取</div>
+      <h2>把论文放进来，系统会自动分析</h2>
+      <p>前端演示版主要读取纯文本内容。PDF / Word 可以先复制正文粘贴到文本框中，再点击“生成可视化”。</p>
     </div>
-    <div class="flywheel">
-      <div class="fly-left tech-corners">
-        <div class="fly-center"><strong>GROWTH<br>LOOP</strong></div>
-        <div class="fly-item f1"><b>1. 场景导入</b><p>部署交互触点节点。</p></div>
-        <div class="fly-item f2"><b>2. 行为共创</b><p>沉淀对话与操作习惯。</p></div>
-        <div class="fly-item f3"><b>3. 算法沉淀</b><p>构建意图与情绪图谱。</p></div>
-        <div class="fly-item f4"><b>4. 方案迭代</b><p>输出空间服务策略。</p></div>
-      </div>
-      <div class="fly-right">
-        <div class="model-row"><div class="model-num">01</div><div><h3>空间部署协议</h3><p>为商业空间提供“职责分配、对话边界、运营逻辑”的完整机器人服务架构设定。</p></div></div>
-        <div class="model-row"><div class="model-num">02</div><div><h3>算法开发支持</h3><p>向设备方输出真实样本报告，涵盖容错对话、异常处理与高频服务路径。</p></div></div>
-        <div class="model-row"><div class="model-num">03</div><div><h3>大众训练网格</h3><p>开放式接收用户预期，形成结构化的创新任务池库。</p></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section lab" id="lab">
-  <div class="container">
-    <div class="header">
-      <div class="eyebrow">Simulation Matrix</div>
-      <h2>切换人群样本，观测系统自适应</h2>
-    </div>
-    <div class="lab-shell">
+    <div class="app">
       <div class="panel">
-        <button class="scenario-btn active" data-scene="museum"><strong>[M] 博物馆游客</strong><span>意图：快速浏览 / 拒绝冗长讲解</span></button>
-        <button class="scenario-btn" data-scene="student"><strong>[S] 校园新生</strong><span>意图：路线指引 / 消除陌生感</span></button>
-        <button class="scenario-btn" data-scene="hotel"><strong>[H] 酒店住客</strong><span>意图：效率至上 / 严格隐私边界</span></button>
-        <button class="scenario-btn" data-scene="elder"><strong>[E] 银发群体</strong><span>意图：稳健降速 / 多重安全确认</span></button>
-        <button class="scenario-btn" data-scene="staff"><strong>[C] 企业员工</strong><span>意图：过滤重复劳动 / 流程提效</span></button>
-      </div>
-      <div class="panel sim tech-corners">
-        <div class="space-map">
-          <div class="zone" id="z1" style="left:10%;top:15%;width:25%;height:25%">ZONE.A</div>
-          <div class="zone" id="z2" style="left:50%;top:10%;width:35%;height:20%">ZONE.B</div>
-          <div class="zone" id="z3" style="left:15%;top:60%;width:25%;height:25%">ZONE.C</div>
-          <div class="zone" id="z4" style="left:55%;top:55%;width:30%;height:30%">ZONE.D</div>
-          <div class="robot-dot" id="robotDot"></div>
-          <div class="user-dot u1"></div><div class="user-dot u2"></div><div class="user-dot u3"></div>
-          <div class="path" id="pathLine"></div>
+        <label class="upload" id="dropArea">
+          <input type="file" id="fileInput" accept=".txt,.md,.html,.htm,.csv,.json,.doc,.docx,.pdf" />
+          <div class="upload-icon">↑</div>
+          <h3>点击上传论文文件</h3>
+          <p class="helper">推荐 TXT / MD；PDF 与 Word 可粘贴正文分析</p>
+        </label>
+        <div class="field">
+          <label>论文标题</label>
+          <input id="titleInput" placeholder="系统会尝试自动识别，也可以手动填写" />
         </div>
-        <div class="dialogue">
-          <div>
-            <small id="sceneKicker">MUSEUM.VISITOR</small>
-            <h3 id="sceneTitle">从机械诵读到意图洞察</h3>
-            <p id="sceneText">通过侦测停留时耗与交互频次，动态切换服务颗粒度，精准匹配信息获取或打卡需求。</p>
-            <div class="chips" id="chips"><span class="chip">SHORT_INFO</span><span class="chip">LOW_INTERRUPT</span></div>
+        <div class="field">
+          <label>粘贴论文正文 / 摘要 / 文献内容</label>
+          <textarea id="paperText" placeholder="例如：基于用户体验下的虚拟空间交互设计……\n摘要：……\n关键词：用户体验；虚拟空间；交互设计……\n第一章 绪论……"></textarea>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary" id="analyzeBtn">生成可视化</button>
+          <button class="btn ghost" id="demoBtn">载入示例</button>
+          <button class="btn ghost" id="clearBtn">清空</button>
+        </div>
+      </div>
+      <div class="results" id="visual">
+        <div class="summary">
+          <div class="stat"><strong id="statWords">0</strong><span>文本字数</span></div>
+          <div class="stat"><strong id="statChapters">0</strong><span>章节节点</span></div>
+          <div class="stat"><strong id="statKeywords">0</strong><span>关键词</span></div>
+          <div class="stat"><strong id="statMethods">0</strong><span>研究方法</span></div>
+        </div>
+        <div class="visual-grid">
+          <div class="viz-card large">
+            <div class="viz-head"><h3>论文结构图</h3><span class="badge">自动目录</span></div>
+            <div class="chapter-list" id="chapterList"><p class="helper">上传或粘贴论文后生成。</p></div>
           </div>
-          <div class="understanding">
-            <div class="score" id="score">76.0</div>
-            <div class="bar"><span id="scoreBar"></span></div>
-            <p id="scoreText">匹配指标：已锁定“快速浏览”策略架构。</p>
+          <div class="viz-card">
+            <div class="viz-head"><h3>关键词频率</h3><span class="badge">概念强度</span></div>
+            <div id="keywordBars"><p class="helper">等待分析。</p></div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="cocreate">
-  <div class="container">
-    <div class="header">
-      <div class="eyebrow">Data Injection</div>
-      <h2>用户意图写入端口</h2>
-      <p>在此输入情境预设，系统将即时解析并转化进人类需求数据库阵列。</p>
-    </div>
-    <div class="co-create">
-      <div class="panel formbox tech-corners">
-        <label>SYS.ROLE (身份定义)</label>
-        <select id="roleInput">
-          <option value="VISITOR">VISITOR</option><option value="STUDENT">STUDENT</option><option value="GUEST">GUEST</option><option value="STAFF">STAFF</option>
-        </select>
-        <label>SYS.LOCATION (物理坐标)</label>
-        <input id="placeInput" value="MUSEUM_EXHIBITION_HALL" />
-        <label>SYS.DIRECTIVE (期望执行方式)</label>
-        <textarea id="wishInput">跳过开场白，直接给出选项界面，并保持安静跟随。</textarea>
-        <button class="btn primary" id="teachBtn" style="margin-top:24px;width:100%">EXECUTE INJECTION</button>
-      </div>
-      <div class="panel output-card tech-corners">
-        <div class="eyebrow">Memory Arrays</div>
-        <h3 style="font-size:24px;margin-bottom:16px;font-weight:500">记忆节点状态</h3>
-        <div class="memory-list" id="memoryList">
-          <div class="memory-item"><b>VISITOR :</b> 需支持短指令、低打扰协议及坐标推荐。</div>
-          <div class="memory-item"><b>STUDENT :</b> 激活轻松声纹模块与路径辅助导航。</div>
-        </div>
-        <div class="radar">
-          <div class="radar-grid">
-            <div class="radar-stat"><strong id="memoryCount">02</strong><span>STORED LOGS</span></div>
-            <div class="radar-stat"><strong id="intentCount">08</strong><span>INTENT TAGS</span></div>
-            <div class="radar-stat"><strong id="sceneCount">04</strong><span>SCENE NODES</span></div>
-            <div class="radar-stat"><strong id="humanScore">76.0</strong><span>MATURITY IDX</span></div>
+          <div class="viz-card">
+            <div class="viz-head"><h3>研究方法路径</h3><span class="badge">流程图</span></div>
+            <div class="path-list" id="methodPath"><p class="helper">等待分析。</p></div>
+          </div>
+          <div class="viz-card large">
+            <div class="viz-head"><h3>关键词知识图谱</h3><span class="badge">节点关系</span></div>
+            <div class="map" id="knowledgeMap"><div class="node main">论文主题</div></div>
+          </div>
+          <div class="viz-card large">
+            <div class="viz-head"><h3>摘要可视化卡片</h3><span class="badge">答辩友好</span></div>
+            <div class="abstract-grid" id="abstractCards"><p class="helper">等待生成。</p></div>
           </div>
         </div>
       </div>
@@ -418,167 +189,117 @@ h1{font-size:clamp(40px,6.5vw,86px);line-height:1.05;letter-spacing:-0.04em;marg
   </div>
 </section>
 
-<section class="section" id="functions">
+<section class="section" id="report">
   <div class="container">
     <div class="header">
-      <div class="eyebrow">Feature Modules</div>
-      <h2>系统核心控制面板</h2>
+      <div class="eyebrow">导出说明</div>
+      <h2>自动生成作品集 / 答辩页面文案</h2>
+      <p>你可以把下面这段直接放入作品集、PPT 或论文可视化项目说明中。</p>
     </div>
-
-    <div class="feature-grid">
-      <div class="function-panel tech-corners">
-        <div class="eyebrow">MOD.01 / PROFILE_GEN</div>
-        <h3 style="font-size:24px;margin-bottom:16px">多维画像生成仪</h3>
-        <div class="segment-row" id="personaRoles">
-          <button class="pill-btn active" data-value="MUSEUM">MUSEUM</button>
-          <button class="pill-btn" data-value="CAMPUS">CAMPUS</button>
-          <button class="pill-btn" data-value="HOTEL">HOTEL</button>
-        </div>
-        <div class="mood-row" id="personaMoods">
-          <button class="pill-btn active" data-value="CURIOUS">CURIOUS</button>
-          <button class="pill-btn" data-value="ANXIOUS">ANXIOUS</button>
-          <button class="pill-btn" data-value="RUSH">RUSH</button>
-        </div>
-        <div class="need-row" id="personaNeeds">
-          <button class="pill-btn active" data-value="FAST_INFO">FAST_INFO</button>
-          <button class="pill-btn" data-value="NAVIGATE">NAVIGATE</button>
-          <button class="pill-btn" data-value="HUMAN_SUPPORT">HUMAN_SUPPORT</button>
-        </div>
-        <button class="btn primary" id="buildPersona" style="margin-top:8px">COMPILE</button>
-        <div class="ai-output" id="personaOutput">
-          <h4>[ WAIT FOR COMPILE ]</h4>
-        </div>
+    <div class="visual-grid">
+      <div class="viz-card">
+        <div class="viz-head"><h3>项目说明</h3><span class="badge">可复制</span></div>
+        <div class="report" id="reportBox">完成一次分析后，这里会自动生成项目说明。</div>
+        <div class="toolbar"><button class="btn dark" id="copyBtn">复制文案</button></div>
       </div>
-
-      <div class="function-panel tech-corners">
-        <div class="eyebrow">MOD.02 / NLP_SIM</div>
-        <h3 style="font-size:24px;margin-bottom:16px">自然语言策略模拟</h3>
-        <textarea class="command-input" id="userCommand" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:6px;padding:12px;color:#fff;font-family:var(--font-sans);min-height:80px">首次造访，时间紧迫，请求核心展区坐标。</textarea>
-        <div class="toolbar"><button class="btn primary" id="askRobot">PROCESS INPUT</button><button class="btn" id="clearChat">CLEAR</button></div>
-        <div class="robot-chat" id="robotChat">
-          <div class="chat-line"><div class="chat-avatar">SYS</div><div class="chat-bubble">Awaiting text input stream...</div></div>
+      <div class="viz-card">
+        <div class="viz-head"><h3>产品定位</h3><span class="badge">商业模式</span></div>
+        <div class="abstract-grid">
+          <div class="abstract-card"><b>目标用户</b><p>研究生、教师、设计师、科研工作者、文献阅读用户。</p></div>
+          <div class="abstract-card"><b>核心价值</b><p>降低论文阅读门槛，把长文本转化为可视化知识结构。</p></div>
+          <div class="abstract-card"><b>可拓展方向</b><p>答辩 PPT、文献综述矩阵、研究空白识别、论文海报生成。</p></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section model" id="dashboard">
-  <div class="container">
-    <div class="header">
-      <div class="eyebrow">Telemetry</div>
-      <h2>全量监测终端</h2>
-    </div>
-    <div class="dash-grid">
-      <div class="dash-card"><small>PROFILES</small><strong id="dashProfiles">01</strong><span>已构建用户画像</span></div>
-      <div class="dash-card"><small>SESSIONS</small><strong id="dashDialogues">00</strong><span>完成对话演算</span></div>
-      <div class="dash-card"><small>SIGNALS</small><strong id="dashFeedback">00</strong><span>回收强化信号</span></div>
-      <div class="dash-card"><small>INDEX</small><strong id="dashMaturity">76.0</strong><span>当前智能成熟度</span></div>
-    </div>
-    <div class="feature-grid" style="margin-top:20px">
-      <div class="function-panel tech-corners">
-        <div class="eyebrow">REPORT_EXPORT</div>
-        <h3 style="font-size:24px;margin-bottom:16px">自动化架构简报生成</h3>
-        <p style="color:var(--muted);font-size:14px;margin-bottom:24px">编译当前实验室内的体验变量与反馈节点，导出为纯文本评估文档（全数据本地储存于设备层）。</p>
-        <div class="toolbar"><button class="btn primary" id="makeReport">GENERATE</button><button class="btn" id="copyReport">COPY</button></div>
-      </div>
-      <div class="report-box" id="reportBox">[ SYS.READY ] 点击 GENERATE 提取数据集...</div>
-    </div>
-  </div>
-</section>
-<div class="toast" id="toast">STATUS_OK</div>
-
-<section class="section" id="process">
-  <div class="container">
-    <div class="header">
-      <div class="eyebrow">Deployment</div>
-      <h2>实施基准管线</h2>
-    </div>
-    <div class="process-grid">
-      <div class="step" data-step="[01]"><h3>空间逆向</h3><p>绘制物理空间人流拓扑图，拆解痛点断层，确立设备最优锚点。</p></div>
-      <div class="step" data-step="[02]"><h3>策略编排</h3><p>设定边界参数与决策树，制定极简介入原则与退出机制。</p></div>
-      <div class="step" data-step="[03]"><h3>沙盒推演</h3><p>基于当前面板进行多并发虚拟测试，观测异常处理反馈。</p></div>
-      <div class="step" data-step="[04]"><h3>数据归一</h3><p>封装高价值需求特征向运营端开放，驱动空间价值飞轮。</p></div>
-    </div>
-  </div>
-</section>
-
-<footer class="footer">© 2026 HUMAN-ROBOT UNDERSTANDING LAB. ARCHITECTURE FOR INTERACTIVE SPACE.</footer>
+<footer class="footer">© 2026 论文可视化实验室 · 中文 iOS 风格页面 · Paper Vision Lab</footer>
+<div class="toast" id="toast">已完成</div>
 
 <script>
-// JS 逻辑与你原版保持基本一致，只做极少量的文本与样式适配
-const scenes = {
-  museum:{kicker:'MUSEUM.VISITOR',title:'从机械诵读到意图洞察',text:'侦测停留时耗与交互频次，动态切换服务颗粒度，精准匹配信息获取或打卡需求。',left:'22%',top:'62%',rotate:'-18deg',score:'76.0',chips:['SHORT_INFO','LOW_INTERRUPT'],zones:['ZONE.A','ZONE.B','ZONE.C','ZONE.D'],scoreText:'匹配指标：已锁定“快速浏览”策略架构。'},
-  student:{kicker:'CAMPUS.STUDENT',title:'从定位寻路到信任建立',text:'摒弃生硬指引，适配低压迫感的交互口吻，提供包含生存资源（食堂/宿舍）的综合路径。',left:'45%',top:'46%',rotate:'24deg',score:'81.0',chips:['NAVIGATE','CASUAL_TONE'],zones:['NODE.A','NODE.B','NODE.C','NODE.D'],scoreText:'匹配指标：已锁定“方向弥补+环境融入”。'},
-  hotel:{kicker:'HOTEL.GUEST',title:'从查询工具到边界护卫',text:'以最高效率终止对话，严守隐私参数限制，遇到深层逻辑即刻执行人工熔断机制。',left:'63%',top:'57%',rotate:'155deg',score:'84.0',chips:['HIGH_EFFICIENCY','PRIVACY_LOCK'],zones:['LOBBY','ELEVATOR','LOUNGE','DESK'],scoreText:'匹配指标：已锁定“高冷效率+边界克制”。'},
-  elder:{kicker:'SENIOR.USER',title:'从指令响应到冗余确认',text:'执行降频降速协议，放大交互区块面积，加入多级反馈验证，提供兜底式人工通道。',left:'34%',top:'70%',rotate:'-48deg',score:'88.0',chips:['SLOW_MODE','DOUBLE_CHECK'],zones:['GATE','CONSULT','SEAT','RAMP'],scoreText:'匹配指标：已锁定“重安全感+慢节拍”。'},
-  staff:{kicker:'CORP.STAFF',title:'从接待外设到自动化脚本',text:'剥离人类高价值沟通成本，承接标准化访客录入与高频设施调度。',left:'58%',top:'38%',rotate:'92deg',score:'79.0',chips:['AUTO_REG','PROCESS_SYNC'],zones:['FRONT','MEETING','WORK','SERVER'],scoreText:'匹配指标：已锁定“高频复用+人机协同”。'}
-};
-const buttons=document.querySelectorAll('.scenario-btn');
-const robot=document.getElementById('robotDot'), path=document.getElementById('pathLine'), kicker=document.getElementById('sceneKicker'), title=document.getElementById('sceneTitle'), text=document.getElementById('sceneText'), score=document.getElementById('score'), scoreBar=document.getElementById('scoreBar'), scoreText=document.getElementById('scoreText'), chips=document.getElementById('chips');
-const zoneEls=[document.getElementById('z1'),document.getElementById('z2'),document.getElementById('z3'),document.getElementById('z4')];
-buttons.forEach(btn=>btn.addEventListener('click',()=>{
-  buttons.forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-  const s=scenes[btn.dataset.scene];
-  kicker.textContent=s.kicker; title.textContent=s.title; text.textContent=s.text; score.textContent=s.score; scoreBar.style.width=parseFloat(s.score)+'%'; scoreText.textContent=s.scoreText;
-  robot.style.left=s.left; robot.style.top=s.top; path.style.left=s.left; path.style.top=s.top; path.style.transform='rotate('+s.rotate+')';
-  chips.innerHTML=s.chips.map(c=>'<span class="chip">'+c+'</span>').join('');
-  zoneEls.forEach((z,i)=>z.textContent=s.zones[i]);
-}));
-
-const teachBtn=document.getElementById('teachBtn');
-let memories=2, intents=8, maturity=76;
-teachBtn.addEventListener('click',()=>{
-  const role=document.getElementById('roleInput').value||'USER';
-  const place=document.getElementById('placeInput').value||'UNKNOWN';
-  const wish=document.getElementById('wishInput').value||'EXEC DEFAULT';
-  const item=document.createElement('div'); item.className='memory-item';
-  item.innerHTML='<b>'+role+' :</b> '+wish+' <span style="font-size:11px;opacity:0.5;display:block;margin-top:4px">['+place+']</span>';
-  const list=document.getElementById('memoryList'); list.insertBefore(item,list.firstChild);
-  memories++; intents+=2; maturity=Math.min(96,maturity+1.5);
-  document.getElementById('memoryCount').textContent=memories.toString().padStart(2,'0');
-  document.getElementById('intentCount').textContent=intents.toString().padStart(2,'0');
-  document.getElementById('humanScore').textContent=maturity.toFixed(1);
-  teachBtn.textContent='[ INJECTION SUCCESS ]';
-  setTimeout(()=>teachBtn.textContent='EXECUTE INJECTION',1800);
+const $ = s => document.querySelector(s);
+const fileInput = $('#fileInput');
+const paperText = $('#paperText');
+const titleInput = $('#titleInput');
+const toastEl = $('#toast');
+function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1600); }
+const demo = `基于用户体验下的虚拟空间交互设计研究——以江汉大学校史馆为例\n\n摘要：随着数字媒体技术的发展，博物馆与校史馆的展示方式逐渐从静态陈列转向沉浸式、交互式与智能化体验。本研究以江汉大学校史馆为对象，围绕用户体验、虚拟空间、信息架构与交互设计展开研究。通过文献研究、案例分析、问卷调查、用户访谈和原型测试，归纳用户在数字校史馆中的信息获取、空间导航、情感认同和互动参与需求，并提出面向虚拟空间的交互设计策略。研究认为，良好的数字文化空间应建立清晰的信息层级、连续的叙事路径、友好的交互反馈和可持续迭代的体验机制。\n\n关键词：用户体验；虚拟空间；交互设计；数字媒体；校史馆；信息架构；沉浸体验\n\n第一章 绪论\n介绍研究背景、研究意义、国内外研究现状与研究方法。\n第二章 相关理论基础\n梳理用户体验理论、空间叙事理论、交互设计理论与数字媒体展示理论。\n第三章 用户调研与需求分析\n通过问卷调查、用户访谈和观察法分析目标用户的行为路径与痛点。\n第四章 虚拟空间交互设计策略\n提出信息导航策略、沉浸体验策略、情感触发策略与可用性优化策略。\n第五章 设计实践与原型测试\n完成校史馆虚拟空间原型设计，并通过可用性测试验证方案。\n第六章 结论与展望\n总结研究成果，指出不足，并展望未来数字文化空间的发展方向。`;
+const methodDict = ['文献研究','案例分析','问卷调查','用户访谈','观察法','原型测试','可用性测试','数据分析','用户旅程','信息架构','实验法','访谈法'];
+const keywordPool = ['用户体验','虚拟空间','交互设计','数字媒体','博物馆','校史馆','信息架构','沉浸体验','空间叙事','用户旅程','可用性','服务设计','视觉设计','文化传播','情感认同','人机交互','知识图谱','文献综述','设计策略','原型测试'];
+fileInput.addEventListener('change', async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const name=file.name; titleInput.value = name.replace(/\.[^.]+$/,'');
+  try{
+    const text = await file.text();
+    if(/%PDF|PK\u0003\u0004/.test(text.slice(0,20)) || text.replace(/[\x00-\x08\x0E-\x1F]/g,'').length < 80){
+      toast('此文件可能需要复制正文粘贴分析');
+    }else{
+      paperText.value=text; toast('文件读取成功');
+    }
+  }catch(err){ toast('读取失败，请复制正文粘贴'); }
 });
-
-// V2 Expansion Logic
-const v2State = JSON.parse(localStorage.getItem('robotLabV2') || '{"profiles":1,"dialogues":0,"feedback":0,"maturity":76.0,"logs":[]}');
-function saveV2(){ localStorage.setItem('robotLabV2', JSON.stringify(v2State)); updateDashboard(); }
-function toast(msg){ const t=document.getElementById('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
-function updateDashboard(){
-  const p=document.getElementById('dashProfiles'), d=document.getElementById('dashDialogues'), f=document.getElementById('dashFeedback'), m=document.getElementById('dashMaturity');
-  if(p){ p.textContent=v2State.profiles.toString().padStart(2,'0'); d.textContent=v2State.dialogues.toString().padStart(2,'0'); f.textContent=v2State.feedback.toString().padStart(2,'0'); m.textContent=v2State.maturity.toFixed(1); }
+$('#demoBtn').addEventListener('click',()=>{paperText.value=demo; titleInput.value='基于用户体验下的虚拟空间交互设计研究'; analyze(); toast('已载入示例论文');});
+$('#clearBtn').addEventListener('click',()=>{paperText.value=''; titleInput.value=''; analyze(true); toast('已清空');});
+$('#analyzeBtn').addEventListener('click',()=>analyze());
+function countOcc(text, word){ return (text.match(new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length; }
+function getTitle(text){
+  if(titleInput.value.trim()) return titleInput.value.trim();
+  const first=(text.split(/\n+/).map(x=>x.trim()).find(x=>x.length>4&&x.length<80)) || '未命名论文';
+  titleInput.value=first; return first;
 }
-function bindPillGroup(id){
-  const box=document.getElementById(id); if(!box) return;
-  box.querySelectorAll('.pill-btn').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('.pill-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');}));
+function getAbstract(text){
+  const m=text.match(/摘要[:：]?([\s\S]{60,520}?)(关键词|关键字|第一章|第1章|一、|\n\n)/); return m?m[1].replace(/\s+/g,'').slice(0,260):text.replace(/\s+/g,'').slice(0,220);
 }
-['personaRoles','personaMoods','personaNeeds'].forEach(bindPillGroup);
-function activeValue(id){ const el=document.querySelector('#'+id+' .pill-btn.active'); return el?el.dataset.value:''; }
-
-document.getElementById('buildPersona')?.addEventListener('click',()=>{
-  const role=activeValue('personaRoles'), mood=activeValue('personaMoods'), need=activeValue('personaNeeds');
-  document.getElementById('personaOutput').innerHTML=`<h4>[ PROFILE : ${role} / ${mood} / ${need} ]</h4><ul><li>Initialize specific logic tree for ${role}.</li><li>Adjust dialogue sentiment parameters to ${mood}.</li><li>Primary execution target set to ${need}.</li></ul>`;
-  v2State.profiles++; v2State.maturity=Math.min(98,v2State.maturity+0.5); v2State.logs.unshift(`GEN: ${role}|${mood}|${need}`); saveV2(); toast('PROFILE COMPILED');
-});
-
-document.getElementById('askRobot')?.addEventListener('click',()=>{
-  const input=document.getElementById('userCommand'); const cmd=input.value.trim(); if(!cmd)return;
-  const chat=document.getElementById('robotChat');
-  chat.insertAdjacentHTML('beforeend',`<div class="chat-line user"><div class="chat-bubble">${cmd}</div><div class="chat-avatar">USR</div></div>`);
-  chat.insertAdjacentHTML('beforeend',`<div class="chat-line"><div class="chat-avatar" style="background:#fff;color:#000">SYS</div><div class="chat-bubble" style="border-color:var(--cyan)"><b style="color:#fff;font-family:var(--font-mono);font-size:12px;display:block;margin-bottom:4px">> INTENT_PARSED</b>Processing input. Matching local vectors. Standby.</div></div>`);
-  chat.scrollTop=chat.scrollHeight; v2State.dialogues++; v2State.maturity=Math.min(98,v2State.maturity+0.2); saveV2(); toast('DATA PROCESSED');
-});
-document.getElementById('clearChat')?.addEventListener('click',()=>{document.getElementById('robotChat').innerHTML='<div class="chat-line"><div class="chat-avatar">SYS</div><div class="chat-bubble">Stream cleared.</div></div>';});
-
-document.getElementById('makeReport')?.addEventListener('click',()=>{
-  const report=`[ SYSTEM EXPORT REPORT ]\n\nPROJECT: HUMAN-ROBOT INTERACTION ARCHITECTURE\nTYPE: HARDWARE-FREE SCENARIO MATRIX\n\n> CURRENT DATA VECTORS\n- GENERATED PROFILES: ${v2State.profiles}\n- SIMULATED DIALOGUES: ${v2State.dialogues}\n- FEEDBACK ANCHORS: ${v2State.feedback}\n- MATURITY INDEX: ${v2State.maturity.toFixed(1)}\n\n> EXECUTION SUMMARY\nSystem successfully modeled dynamic spatial interactions across multiple physical nodes. Ready for hardware integration.`;
-  document.getElementById('reportBox').textContent=report; saveV2(); toast('REPORT GENERATED');
-});
-document.getElementById('copyReport')?.addEventListener('click',async()=>{const txt=document.getElementById('reportBox').textContent; try{await navigator.clipboard.writeText(txt); toast('COPIED TO CLIPBOARD');}catch(e){}});
-updateDashboard();
+function getChapters(text){
+  const lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const list=[];
+  const reg=/^((第[一二三四五六七八九十0-9]+[章节])|([一二三四五六七八九十]+、)|(\d+(\.\d+)?\s+)).{2,36}$/;
+  lines.forEach(l=>{ if(reg.test(l) && list.length<10) list.push(l.replace(/^\d+(\.\d+)?\s*/,'')); });
+  if(list.length) return list;
+  return ['研究背景与问题提出','理论基础与文献综述','用户调研与需求分析','设计策略与框架构建','设计实践与原型验证','结论与展望'];
+}
+function analyze(clear=false){
+  if(clear){
+    $('#statWords').textContent='0'; $('#statChapters').textContent='0'; $('#statKeywords').textContent='0'; $('#statMethods').textContent='0';
+    $('#chapterList').innerHTML='<p class="helper">上传或粘贴论文后生成。</p>'; $('#keywordBars').innerHTML='<p class="helper">等待分析。</p>'; $('#methodPath').innerHTML='<p class="helper">等待分析。</p>'; $('#knowledgeMap').innerHTML='<div class="node main">论文主题</div>'; $('#abstractCards').innerHTML='<p class="helper">等待生成。</p>'; $('#reportBox').textContent='完成一次分析后，这里会自动生成项目说明。'; return;
+  }
+  const text=paperText.value.trim(); if(!text){toast('请先上传或粘贴论文内容');return;}
+  const title=getTitle(text), abstract=getAbstract(text), chapters=getChapters(text);
+  const keys=keywordPool.map(k=>({k,c:countOcc(text,k)})).filter(x=>x.c>0).sort((a,b)=>b.c-a.c).slice(0,8);
+  if(keys.length<4){ ['研究方法','论文结构','设计策略','可视化'].forEach((k,i)=>keys.push({k,c:3-i})); }
+  const methods=methodDict.filter(m=>text.includes(m)).slice(0,8);
+  const methodFinal=methods.length?methods:['文献研究','案例分析','用户调研','需求归纳','原型设计','测试优化'];
+  $('#statWords').textContent=text.length; $('#statChapters').textContent=chapters.length; $('#statKeywords').textContent=keys.length; $('#statMethods').textContent=methodFinal.length;
+  $('#chapterList').innerHTML=chapters.map((c,i)=>`<div class="chapter"><div class="chapter-num">${i+1}</div><div><b>${c}</b><small>系统识别为论文结构节点</small></div><span class="badge">章节</span></div>`).join('');
+  const max=Math.max(...keys.map(x=>x.c));
+  $('#keywordBars').innerHTML=keys.map(x=>`<div class="bar-row"><b>${x.k}</b><div class="bar-track"><div class="bar-fill" style="width:${Math.max(12, x.c/max*100)}%"></div></div><span>${x.c}</span></div>`).join('');
+  $('#methodPath').innerHTML=methodFinal.map((m,i)=>`<span class="step-pill">${i+1}. ${m}</span>${i<methodFinal.length-1?'<span class="arrow">→</span>':''}`).join('');
+  buildMap(title, keys.slice(0,7));
+  const theme=keys.slice(0,3).map(x=>x.k).join('、') || '论文主题';
+  $('#abstractCards').innerHTML=`
+    <div class="abstract-card"><b>研究背景</b><p>${abstract.slice(0,72)}……</p></div>
+    <div class="abstract-card"><b>研究对象</b><p>${title.includes('以')?title.split('以').pop().replace(/[———-].*/,''):'围绕论文主题展开研究'}</p></div>
+    <div class="abstract-card"><b>核心概念</b><p>${theme}</p></div>
+    <div class="abstract-card"><b>研究方法</b><p>${methodFinal.slice(0,4).join('、')}</p></div>
+    <div class="abstract-card"><b>结构特点</b><p>共识别 ${chapters.length} 个章节节点，可用于答辩框架展示。</p></div>
+    <div class="abstract-card"><b>可视化价值</b><p>将长文本转化为结构图、词频图、知识图谱和摘要卡片。</p></div>`;
+  $('#reportBox').textContent=`《${title}》论文可视化分析页面以 iOS 风格的轻量界面呈现论文内容。系统通过上传或粘贴文本，自动识别论文标题、摘要、章节结构、研究方法与核心关键词，并生成论文结构图、关键词频率图、研究方法路径图和知识图谱。该页面适合作为论文答辩辅助展示、作品集项目、文献阅读工具或研究生论文管理平台原型，能够帮助用户从视觉层面快速理解论文逻辑、研究重点与学术表达结构。`;
+  toast('可视化生成完成');
+}
+function buildMap(title, keys){
+  const map=$('#knowledgeMap'); map.innerHTML='';
+  const safeTitle=(title||'论文主题').slice(0,14);
+  map.insertAdjacentHTML('beforeend',`<div class="node main">${safeTitle}</div>`);
+  const pos=[['12%','16%'],['62%','14%'],['8%','58%'],['68%','60%'],['38%','8%'],['38%','78%'],['74%','36%']];
+  keys.forEach((x,i)=>{
+    const [l,t]=pos[i%pos.length];
+    map.insertAdjacentHTML('beforeend',`<div class="node" style="left:${l};top:${t}">${x.k}</div>`);
+  });
+  const lines=[['30%','31%','150px','20deg'],['53%','32%','145px','-22deg'],['28%','54%','150px','-22deg'],['53%','56%','155px','22deg'],['47%','28%','105px','90deg'],['48%','64%','110px','90deg']];
+  lines.forEach(a=>map.insertAdjacentHTML('beforeend',`<div class="link" style="left:${a[0]};top:${a[1]};width:${a[2]};transform:rotate(${a[3]})"></div>`));
+}
+$('#copyBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#reportBox').textContent);toast('文案已复制');}catch(e){toast('复制失败，请手动选择');}});
 </script>
 </body>
 </html>
