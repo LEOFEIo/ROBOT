@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RoboScene — 机器人商业化场景解决方案</title>
+<title>RoboScene Lab — 机器人交互空间作品集</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -64,7 +64,7 @@
   }
 
   /* SECTIONS */
-  section { width: 100%; }
+  section { width: 1套; }
 
   /* HERO */
   .hero {
@@ -135,7 +135,7 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
   }
-  .hero-robot-img img { width: 100%; display: block; }
+  .hero-robot-img img { width: 1套; display: block; }
 
   /* STATS BAR */
   .stats-bar {
@@ -261,7 +261,7 @@
     aspect-ratio: 21/9;
   }
   .case-img {
-    width: 100%; height: 100%; object-fit: cover;
+    width: 1套; height: 1套; object-fit: cover;
     display: block;
   }
   .case-overlay {
@@ -387,7 +387,7 @@
     flex-shrink: 0; margin-top: 1px;
   }
   .price-btn {
-    display: block; width: 100%; text-align: center;
+    display: block; width: 1套; text-align: center;
     margin-top: 32px;
     padding: 13px; border-radius: 980px;
     font-size: 15px; font-weight: 500;
@@ -423,7 +423,7 @@
     color: var(--gray-800);
   }
   .about-visual {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 1套);
     border-radius: var(--radius-lg); padding: 48px;
     display: flex; flex-direction: column; gap: 16px;
   }
@@ -463,11 +463,11 @@
   footer p { font-size: 13px; color: var(--gray-400); }
 
   /* ROBOT ILLUSTRATION SVG */
-  .inline-robot { display: block; width: 100%; height: auto; }
+  .inline-robot { display: block; width: 1套; height: auto; }
 
   /* FAKE IMAGE PLACEHOLDERS */
   .img-placeholder {
-    width: 100%; height: 100%;
+    width: 1套; height: 1套;
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; color: rgba(255,255,255,0.4);
   }
@@ -482,17 +482,134 @@
     .about { grid-template-columns: 1fr; gap: 48px; }
     .nav-links { display: none; }
   }
+
+  .scene-tab {
+    width: 100%;
+    border: 0;
+    text-align: left;
+    color: rgba(255,255,255,0.58);
+    background: transparent;
+    border-radius: 18px;
+    padding: 18px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    font-family: inherit;
+    display:block;
+  }
+  .scene-tab + .scene-tab { margin-top: 6px; }
+  .scene-tab strong { display:block; color:inherit; font-size:17px; margin-bottom:4px; }
+  .scene-tab span { font-size:13px; line-height:1.5; }
+  .scene-tab.active {
+    background: rgba(10,132,255,0.18);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(10,132,255,0.34);
+  }
+  .space-preview {
+    min-height: 560px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background:
+      radial-gradient(circle at 50% 20%, rgba(10,132,255,0.16), transparent 36%),
+      linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+    position: relative;
+    overflow: hidden;
+  }
+  .space-preview::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    transform: perspective(800px) rotateX(54deg) scale(1.8);
+    transform-origin: 50% 100%;
+    opacity: .75;
+  }
+  .scene-map {
+    position: absolute;
+    inset: 32px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.18);
+    overflow: hidden;
+  }
+  .zone {
+    position: absolute;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    display:flex; align-items:center; justify-content:center;
+    color: rgba(255,255,255,0.48);
+    font-size: 13px;
+    font-weight: 650;
+  }
+  .robot-dot {
+    position: absolute;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #0a84ff;
+    left: 17%; top: 64%;
+    box-shadow: 0 0 0 12px rgba(10,132,255,0.14), 0 0 40px rgba(10,132,255,0.8);
+    transition: left .45s ease, top .45s ease, background .45s ease;
+    z-index: 3;
+  }
+  .robot-dot::after {
+    content: "🤖";
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 15px;
+  }
+  .path-line {
+    position: absolute;
+    left: 17%; top: 64%;
+    width: 58%; height: 1.5px;
+    background: linear-gradient(90deg, rgba(10,132,255,.8), transparent);
+    transform-origin: left center;
+    opacity: .75;
+  }
+  .scene-info {
+    position: absolute;
+    left: 32px; right: 32px; bottom: 32px;
+    border-radius: 22px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(18px);
+    padding: 24px;
+    z-index: 4;
+  }
+  .scene-info small {
+    color: #0a84ff;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .scene-info h3 {
+    font-size: 28px;
+    letter-spacing: -0.04em;
+    margin: 8px 0;
+    color:#fff;
+  }
+  .scene-info p {
+    color: rgba(255,255,255,0.62);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  @media (max-width:900px){
+    .interactive-shell{grid-template-columns:1fr!important;}
+    .space-preview{min-height:620px;}
+  }
+
 </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo">RoboScene</a>
+  <a href="#" class="nav-logo">RoboScene Lab</a>
   <ul class="nav-links">
-    <li><a href="#services">服务</a></li>
+    <li><a href="#services">能力</a></li>
     <li><a href="#cases">案例</a></li>
-    <li><a href="#pricing">报价</a></li>
+    <li><a href="#model">新模式</a></li>
     <li><a href="#about">关于</a></li>
   </ul>
   <a href="#contact" class="nav-cta">联系我们 →</a>
@@ -503,23 +620,23 @@
   <div class="hero-bg"></div>
   <div class="hero-glow"></div>
   <div class="hero-content">
-    <p class="hero-eyebrow">机器人商业化解决方案</p>
-    <h1 class="hero-title">让机器人<br><span>真正工作</span>起来</h1>
-    <p class="hero-subtitle">不造机器人本体，专注品牌包装、场景设计与商业化落地——帮企业把机器人变成可见的价值。</p>
+    <p class="hero-eyebrow">机器人交互空间作品集</p>
+    <h1 class="hero-title">让机器人<br><span>进入交互空间</span></h1>
+    <p class="hero-subtitle">不造机器人本体，专注空间场景、交互脚本、品牌表达与内容运营——把机器人变成可体验、可传播、可持续迭代的空间系统。</p>
     <div class="hero-actions">
-      <a href="#cases" class="btn-primary">查看案例集</a>
-      <a href="#services" class="btn-ghost">了解服务</a>
+      <a href="#cases" class="btn-primary">查看交互空间</a>
+      <a href="#services" class="btn-ghost">查看新模式</a>
     </div>
     <div class="hero-robot-img">
       <svg class="inline-robot" viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="heroGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#0a2540"/>
-            <stop offset="100%" stop-color="#071521"/>
+            <stop offset="1套" stop-color="#071521"/>
           </linearGradient>
           <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#1e3a5f"/>
-            <stop offset="100%" stop-color="#0d1f35"/>
+            <stop offset="1套" stop-color="#0d1f35"/>
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -617,7 +734,7 @@
 
         <!-- UI CARD BOTTOM RIGHT -->
         <rect x="480" y="180" width="180" height="90" rx="10" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-        <text x="494" y="202" font-size="9" fill="rgba(10,132,255,0.8)" font-family="Inter,sans-serif" font-weight="600" letter-spacing="0.06em">ROI GROWTH</text>
+        <text x="494" y="202" font-size="9" fill="rgba(10,132,255,0.8)" font-family="Inter,sans-serif" font-weight="600" letter-spacing="0.06em">SPACE VALUE</text>
         <text x="494" y="222" font-size="16" fill="white" font-family="Inter,sans-serif" font-weight="600">增长运营</text>
         <text x="494" y="240" font-size="11" fill="rgba(255,255,255,0.4)" font-family="Inter,sans-serif">内容 · 获客 · 转化</text>
         <rect x="494" y="252" width="45" height="5" rx="2.5" fill="rgba(10,132,255,0.6)"/>
@@ -636,20 +753,20 @@
 <!-- STATS -->
 <div class="stats-bar">
   <div class="stat-item">
-    <div class="stat-num">4亿+</div>
-    <div class="stat-label">2026年中国商用<br>服务机器人市场规模</div>
+    <div class="stat-num">4类</div>
+    <div class="stat-label">机器人空间<br>典型应用场景</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num">3档</div>
-    <div class="stat-label">从品牌到落地<br>全链条服务包</div>
+    <div class="stat-num">3层</div>
+    <div class="stat-label">空间层 / 交互层<br>内容层方法</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num">9800¥</div>
-    <div class="stat-label">入门套餐起步<br>轻资产快启动</div>
+    <div class="stat-num">0硬件</div>
+    <div class="stat-label">不造机器人本体<br>先做场景体验</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num">100%</div>
-    <div class="stat-label">场景化交付<br>不造机器人本体</div>
+    <div class="stat-num">1套</div>
+    <div class="stat-label">作品集到提案<br>可复用模板</div>
   </div>
 </div>
 
@@ -670,7 +787,7 @@
       </div>
       <p class="service-num">01</p>
       <h3>机器人企业<br>品牌升级</h3>
-      <p>技术强但表达弱？我们把复杂技术转化为客户听得懂、愿意付钱的品牌价值——融资PPT、官网、产品手册一次搞定。</p>
+      <p>技术强但表达弱？我们把复杂技术转化为客户听得懂、愿意理解的品牌价值——融资PPT、官网、产品手册一次搞定。</p>
       <div class="service-tags">
         <span class="tag">Logo优化</span>
         <span class="tag">融资PPT</span>
@@ -734,11 +851,11 @@
   <div class="cases-grid">
     <!-- FEATURED CASE -->
     <div class="case-card featured">
-      <svg width="100%" height="100%" viewBox="0 0 1120 400" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+      <svg width="1套" height="1套" viewBox="0 0 1120 400" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
         <defs>
           <linearGradient id="c1" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#0a1628"/>
-            <stop offset="100%" stop-color="#0d2b4e"/>
+            <stop offset="1套" stop-color="#0d2b4e"/>
           </linearGradient>
         </defs>
         <rect width="1120" height="400" fill="url(#c1)"/>
@@ -796,11 +913,11 @@
 
     <!-- CASE 2 -->
     <div class="case-card">
-      <svg width="100%" height="100%" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+      <svg width="1套" height="1套" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
         <defs>
           <linearGradient id="c2" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#0f1e0f"/>
-            <stop offset="100%" stop-color="#1a3a1a"/>
+            <stop offset="1套" stop-color="#1a3a1a"/>
           </linearGradient>
         </defs>
         <rect width="560" height="420" fill="url(#c2)"/>
@@ -836,11 +953,11 @@
 
     <!-- CASE 3 -->
     <div class="case-card">
-      <svg width="100%" height="100%" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+      <svg width="1套" height="1套" viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
         <defs>
           <linearGradient id="c3" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#1a0f28"/>
-            <stop offset="100%" stop-color="#2d1a4e"/>
+            <stop offset="1套" stop-color="#2d1a4e"/>
           </linearGradient>
         </defs>
         <rect width="560" height="420" fill="url(#c3)"/>
@@ -860,19 +977,19 @@
         <text x="94" y="284" font-size="10" fill="rgba(83,74,183,0.9)" font-family="Inter,sans-serif">🤖</text>
 
         <!-- ROI metrics in right panel -->
-        <text x="372" y="104" font-size="9" fill="rgba(83,74,183,0.7)" font-family="Inter,sans-serif" font-weight="600" letter-spacing="0.06em">DEPLOYMENT ROI</text>
+        <text x="372" y="104" font-size="9" fill="rgba(83,74,183,0.7)" font-family="Inter,sans-serif" font-weight="600" letter-spacing="0.06em">SPACE FEEDBACK</text>
         <line x1="368" y1="112" x2="508" y2="112" stroke="rgba(83,74,183,0.2)" stroke-width="1"/>
         <text x="372" y="135" font-size="22" fill="white" font-family="Inter,sans-serif" font-weight="600">↑ 38%</text>
         <text x="372" y="152" font-size="10" fill="rgba(255,255,255,0.45)" font-family="Inter,sans-serif">客户满意度提升</text>
         <text x="372" y="185" font-size="22" fill="white" font-family="Inter,sans-serif" font-weight="600">↓ 60%</text>
         <text x="372" y="202" font-size="10" fill="rgba(255,255,255,0.45)" font-family="Inter,sans-serif">前台重复咨询减少</text>
-        <text x="372" y="235" font-size="22" fill="white" font-family="Inter,sans-serif" font-weight="600">3个月</text>
-        <text x="372" y="252" font-size="10" fill="rgba(255,255,255,0.45)" font-family="Inter,sans-serif">完整落地周期</text>
+        <text x="372" y="235" font-size="22" fill="white" font-family="Inter,sans-serif" font-weight="600">阶段化</text>
+        <text x="372" y="252" font-size="10" fill="rgba(255,255,255,0.45)" font-family="Inter,sans-serif">体验迭代节奏</text>
       </svg>
       <div class="case-overlay">
         <p class="case-tag">案例 03 · 场景落地</p>
         <h3 class="case-title">五星酒店迎宾机器人<br>服务落地全案</h3>
-        <p class="case-desc">从选型采购到运营培训，3个月完成全流程机器人服务导入。</p>
+        <p class="case-desc">从选型采购到运营培训，完成从空间规划、交互脚本到运营内容的完整导入。</p>
       </div>
     </div>
   </div>
@@ -909,70 +1026,103 @@
   </div>
 </section>
 
-<!-- PRICING -->
-<section class="pricing" id="pricing">
+
+<!-- MODE -->
+<section class="pricing" id="model">
   <div class="pricing-inner">
-    <p class="section-eyebrow">服务报价</p>
-    <h2 class="section-title">透明定价，三档可选</h2>
-    <p class="section-sub">根据项目规模灵活选择，也可组合定制。</p>
+    <p class="section-eyebrow">新的模式</p>
+    <h2 class="section-title">机器人交互空间共创模式</h2>
+    <p class="section-sub">这里不展示任何信息信息，而是用“交付内容”和“适合对象”表达专业度。它既可以作为你的作品集，也可以作为客户提案页和个人创业样板页。</p>
 
     <div class="pricing-grid">
       <div class="price-card">
-        <p class="price-tier">入门套餐</p>
-        <p class="price-name">品牌增长包</p>
-        <p class="price-range"><sup>¥</sup>9,800</p>
-        <p class="price-unit">起 / 套</p>
+        <p class="price-tier">作品集模式</p>
+        <p class="price-name">概念方案展示</p>
+        <p class="price-unit">适合：课程作业 / 毕设方向 / 个人作品集</p>
         <div class="price-divider"></div>
         <ul class="price-features">
-          <li>Logo 优化与规范</li>
-          <li>官网首页设计稿</li>
-          <li>产品海报 × 5 张</li>
-          <li>公众号推文 × 3 篇</li>
-          <li>展会 KV 设计</li>
+          <li>机器人场景概念设定</li>
+          <li>用户旅程与空间动线图</li>
+          <li>关键界面与视觉规范</li>
+          <li>作品集图文排版</li>
+          <li>可放入个人网站展示</li>
         </ul>
-        <a href="#contact" class="price-btn price-btn-outline">了解详情</a>
+        <a href="#space" class="price-btn price-btn-outline">查看交互空间</a>
       </div>
 
       <div class="price-card featured">
-        <span class="featured-badge">最受欢迎</span>
-        <p class="price-tier">专业套餐</p>
-        <p class="price-name">智慧展厅全案</p>
-        <p class="price-range"><sup>¥</sup>30,000</p>
-        <p class="price-unit">起 / 项目</p>
+        <span class="featured-badge">推荐方向</span>
+        <p class="price-tier">提案模式</p>
+        <p class="price-name">交互空间全案</p>
+        <p class="price-unit">适合：校史馆 / 科技馆 / 企业展厅 / 园区</p>
         <div class="price-divider"></div>
         <ul class="price-features">
-          <li>展厅路线与场景设计</li>
-          <li>机器人导览脚本全套</li>
-          <li>交互屏幕 UI 设计</li>
-          <li>语音话术 + 问答库</li>
-          <li>展厅视觉系统</li>
-          <li>宣传视频脚本与制作</li>
-          <li>3个月运营支持</li>
+          <li>空间场景地图</li>
+          <li>机器人导览脚本</li>
+          <li>屏幕 UI 与问答流程</li>
+          <li>活动与内容运营模板</li>
+          <li>演示型网页或PPT</li>
+          <li>用户反馈与体验复盘</li>
         </ul>
-        <a href="#contact" class="price-btn price-btn-fill">立即咨询</a>
+        <a href="#contact" class="price-btn price-btn-fill">开始共创</a>
       </div>
 
       <div class="price-card">
-        <p class="price-tier">顾问套餐</p>
-        <p class="price-name">场景落地顾问</p>
-        <p class="price-range"><sup>¥</sup>5,000</p>
-        <p class="price-unit">起 / 月</p>
+        <p class="price-tier">实验室模式</p>
+        <p class="price-name">长期内容共创</p>
+        <p class="price-unit">适合：个人品牌 / 公众号 / 行业观察</p>
         <div class="price-divider"></div>
         <ul class="price-features">
-          <li>机器人选型与采购建议</li>
-          <li>供应商对接与谈判支持</li>
-          <li>场景需求调研报告</li>
-          <li>试运行全程跟进</li>
-          <li>渠道佣金 5%-15%（设备成交）</li>
-          <li>月度运营复盘</li>
+          <li>月度主题场景更新</li>
+          <li>AI生成视觉与视频脚本</li>
+          <li>机器人行业案例拆解</li>
+          <li>场景方案库持续积累</li>
+          <li>个人品牌内容沉淀</li>
         </ul>
-        <a href="#contact" class="price-btn price-btn-outline">了解详情</a>
+        <a href="#cases" class="price-btn price-btn-outline">查看案例</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE SPACE -->
+<section class="cases" id="space">
+  <div class="cases-header">
+    <p class="section-eyebrow" style="color: #0a84ff;">Interactive Space</p>
+    <h2 class="section-title">点击切换机器人交互空间</h2>
+    <p class="section-sub">这里不是传统服务列表，而是一个可演示的场景实验室。你可以向客户展示机器人如何在不同空间中完成导览、咨询、迎宾、巡检与内容传播。</p>
+  </div>
+
+  <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:320px 1fr;gap:20px;" class="interactive-shell">
+    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:14px;">
+      <button class="scene-tab active" data-scene="museum"><strong>博物馆 / 校史馆</strong><span>导览讲解、展项问答、路线推荐、打卡互动。</span></button>
+      <button class="scene-tab" data-scene="campus"><strong>校园空间</strong><span>迎新咨询、校史讲解、活动导流、访客引导。</span></button>
+      <button class="scene-tab" data-scene="hotel"><strong>酒店 / 商业空间</strong><span>迎宾接待、服务说明、楼层引导、活动提醒。</span></button>
+      <button class="scene-tab" data-scene="park"><strong>园区 / 企业展厅</strong><span>访客接待、品牌介绍、巡检提示、产品展示。</span></button>
+    </div>
+
+    <div class="space-preview">
+      <div class="scene-map">
+        <div class="zone" id="zoneA" style="left:6%;top:10%;width:32%;height:22%;">入口接待</div>
+        <div class="zone" id="zoneB" style="left:44%;top:10%;width:24%;height:22%;">核心展区</div>
+        <div class="zone" id="zoneC" style="left:73%;top:10%;width:21%;height:22%;">互动屏</div>
+        <div class="zone" id="zoneD" style="left:6%;top:42%;width:28%;height:20%;">打卡区</div>
+        <div class="zone" id="zoneE" style="left:40%;top:42%;width:26%;height:20%;">问答区</div>
+        <div class="zone" id="zoneF" style="left:72%;top:42%;width:22%;height:20%;">出口反馈</div>
+        <div class="path-line" id="pathLine"></div>
+        <div class="robot-dot" id="robotDot"></div>
+      </div>
+      <div class="scene-info">
+        <small id="sceneKicker">Museum Guide</small>
+        <h3 id="sceneTitle">机器人作为“移动导览员”</h3>
+        <p id="sceneDesc">从入口识别访客需求，推荐参观路线；在重点展项前触发讲解与问答；最后引导用户完成打卡、分享与反馈，形成完整体验闭环。</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ABOUT -->
+
 <section style="padding: 0;">
   <div class="about" id="about">
     <div class="about-text">
@@ -1036,18 +1186,84 @@
 <!-- CTA -->
 <section class="cta-section" id="contact">
   <p class="section-eyebrow" style="color: #0a84ff;">开始合作</p>
-  <h2 class="section-title">你的第一步<br>不是造机器人</h2>
-  <p class="section-sub">先做一套作品集，再用方案赢得第一个客户。我们帮你完成这一步。</p>
+  <h2 class="section-title">先做一个会说话的场景<br>再让机器人进入现实</h2>
+  <p class="section-sub">先用作品集展示概念方案，再把它转化为提案、课程作业、毕业作品、公众号内容或真实项目沟通材料。</p>
   <div class="cta-actions">
-    <a href="mailto:hello@roboscene.cn" class="btn-primary">发送合作邀请</a>
-    <a href="#cases" class="btn-ghost">查看案例集</a>
+    <a href="mailto:supkefly@gmail.com" class="btn-primary">联系 Leo Xu</a>
+    <a href="#cases" class="btn-ghost">查看交互空间</a>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <p>© 2024 RoboScene &nbsp;·&nbsp; 机器人商业化场景解决方案 &nbsp;·&nbsp; hello@roboscene.cn</p>
+  <p>© 2026 RoboScene Lab &nbsp;·&nbsp; 机器人商业化场景解决方案 &nbsp;·&nbsp; supkefly@gmail.com</p>
 </footer>
+
+
+<script>
+  const scenes = {
+    museum: {
+      kicker: "Museum Guide",
+      title: "机器人作为“移动导览员”",
+      desc: "从入口识别访客需求，推荐参观路线；在重点展项前触发讲解与问答；最后引导用户完成打卡、分享与反馈，形成完整体验闭环。",
+      zones: ["入口接待", "核心展区", "互动屏", "打卡区", "问答区", "出口反馈"],
+      left: "17%", top: "64%", color: "#0a84ff", rotate: "-10deg"
+    },
+    campus: {
+      kicker: "Campus Assistant",
+      title: "机器人作为“校园迎新助手”",
+      desc: "在迎新入口提供路线、专业介绍、社团活动和校史讲解；结合校园地图与活动内容，把机器人变成新生认识学校的第一入口。",
+      zones: ["校门入口", "报到处", "校园地图", "社团区", "校史墙", "活动出口"],
+      left: "46%", top: "18%", color: "#19c37d", rotate: "18deg"
+    },
+    hotel: {
+      kicker: "Hospitality Host",
+      title: "机器人作为“空间服务管家”",
+      desc: "在酒店与商业空间中承担迎宾、楼层引导、服务说明和活动提醒，让重复咨询变成标准化服务流程，并提升空间科技感。",
+      zones: ["大堂入口", "前台", "电梯厅", "休息区", "活动区", "服务反馈"],
+      left: "78%", top: "58%", color: "#8b5cf6", rotate: "165deg"
+    },
+    park: {
+      kicker: "Enterprise Navigator",
+      title: "机器人作为“企业展厅接待员”",
+      desc: "围绕访客接待、品牌介绍、产品展示、会议引导和园区巡检，构建企业级机器人接待与展示路径。",
+      zones: ["访客入口", "品牌墙", "产品区", "会议区", "巡检点", "数据看板"],
+      left: "24%", top: "22%", color: "#ff9f0a", rotate: "35deg"
+    }
+  };
+
+  const tabs = document.querySelectorAll(".scene-tab");
+  const robot = document.getElementById("robotDot");
+  const line = document.getElementById("pathLine");
+  const kicker = document.getElementById("sceneKicker");
+  const title = document.getElementById("sceneTitle");
+  const desc = document.getElementById("sceneDesc");
+  const zoneIds = ["zoneA", "zoneB", "zoneC", "zoneD", "zoneE", "zoneF"];
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      const data = scenes[tab.dataset.scene];
+
+      kicker.textContent = data.kicker;
+      title.textContent = data.title;
+      desc.textContent = data.desc;
+      robot.style.left = data.left;
+      robot.style.top = data.top;
+      robot.style.background = data.color;
+      robot.style.boxShadow = `0 0 0 12px ${data.color}22, 0 0 40px ${data.color}`;
+      line.style.left = data.left;
+      line.style.top = data.top;
+      line.style.transform = `rotate(${data.rotate})`;
+      line.style.background = `linear-gradient(90deg, ${data.color}, transparent)`;
+
+      zoneIds.forEach((id, index) => {
+        document.getElementById(id).textContent = data.zones[index];
+      });
+    });
+  });
+</script>
 
 </body>
 </html>
