@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070D" />
+  <title>Paper Reader OS X｜Research Intelligence System</title>
+
+  <!-- Core parsers / visualization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#05070D;
+      --bg2:#0A0E1A;
+      --card:rgba(255,255,255,.075);
+      --card2:rgba(255,255,255,.11);
+      --glass:rgba(255,255,255,.08);
+      --glass2:rgba(255,255,255,.15);
+      --border:rgba(255,255,255,.18);
+      --border2:rgba(255,255,255,.28);
+      --text:#F5F7FF;
+      --sub:#CAD1E8;
+      --muted:#7F89A8;
+      --blue:#4DA3FF;
+      --cyan:#49E5FF;
+      --purple:#A77CFF;
+      --green:#42F39B;
+      --orange:#FFB84D;
+      --red:#FF5A68;
+      --shadow:0 24px 90px rgba(0,0,0,.45);
+      --shadow2:0 10px 36px rgba(0,0,0,.28);
+      --r16:16px;
+      --r22:22px;
+      --r30:30px;
+      --r40:40px;
+      --top:76px;
+      color-scheme:dark;
+    }
+    body.light{
+      --bg:#F4F7FB;
+      --bg2:#FFFFFF;
+      --card:rgba(255,255,255,.72);
+      --card2:rgba(255,255,255,.9);
+      --glass:rgba(255,255,255,.68);
+      --glass2:rgba(255,255,255,.86);
+      --border:rgba(20,32,60,.12);
+      --border2:rgba(20,32,60,.18);
+      --text:#111827;
+      --sub:#334155;
+      --muted:#64748B;
+      --shadow:0 24px 90px rgba(30,60,120,.15);
+      --shadow2:0 10px 36px rgba(30,60,120,.12);
+      color-scheme:light;
+    }
+    *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;min-height:100dvh;color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+      background:
+        radial-gradient(circle at 18% -10%, rgba(77,163,255,.25), transparent 34%),
+        radial-gradient(circle at 80% 3%, rgba(167,124,255,.24), transparent 32%),
+        radial-gradient(circle at 50% 108%, rgba(73,229,255,.11), transparent 34%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      overflow-x:hidden;
+      line-height:1.5;
+    }
+    #neuralBg{position:fixed;inset:0;z-index:-2;width:100%;height:100%;opacity:.72}
+    .aurora{position:fixed;inset:auto -10% -20% -10%;height:46vh;z-index:-1;pointer-events:none;filter:blur(46px);opacity:.38;background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));animation:floatAurora 9s ease-in-out infinite alternate}
+    @keyframes floatAurora{from{transform:translate3d(-5%,4%,0) rotate(-2deg)}to{transform:translate3d(5%,-5%,0) rotate(2deg)}}
+    .app{width:min(1520px,calc(100% - 32px));margin:auto;padding:18px 0 calc(96px + env(safe-area-inset-bottom))}
+    .glass{background:linear-gradient(135deg,var(--glass),rgba(255,255,255,.035));backdrop-filter:saturate(180%) blur(36px);-webkit-backdrop-filter:saturate(180%) blur(36px);border:1px solid var(--border);box-shadow:var(--shadow2), inset 0 1px 0 rgba(255,255,255,.22)}
+    .topbar{position:sticky;top:max(12px,env(safe-area-inset-top));z-index:60;min-height:var(--top);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-radius:999px;margin-bottom:20px;box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:12px;min-width:235px}
+    .logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:white;font-weight:900;background:linear-gradient(135deg,#007AFF,#6C5CE7);box-shadow:0 12px 28px rgba(77,163,255,.32);flex:0 0 auto}
+    .brand b{display:block;font-size:16px;letter-spacing:-.2px}.brand small{display:block;color:var(--muted);font-weight:750;font-size:12px;margin-top:1px}
+    .nav{display:flex;gap:4px;background:rgba(255,255,255,.08);padding:4px;border-radius:999px;overflow:auto;scrollbar-width:none;max-width:820px}.nav::-webkit-scrollbar{display:none}
+    .nav button{border:0;background:transparent;color:var(--muted);padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:800;white-space:nowrap;transition:.22s}.nav button.active{background:var(--glass2);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px rgba(0,0,0,.16)}
+    button,.btn{font-family:inherit;border:1px solid var(--border);background:var(--card);color:var(--text);min-height:42px;padding:10px 16px;border-radius:999px;cursor:pointer;font-weight:850;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:.2s;user-select:none}.btn:hover,button:hover{transform:translateY(-1px);border-color:var(--border2);background:var(--card2)}.btn:active,button:active{transform:scale(.98)}.primary{border:0;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 16px 30px rgba(77,163,255,.25)}.green{border:0;background:linear-gradient(135deg,#12C272,#42F39B);color:#001B0E}.danger{border:0;background:rgba(255,90,104,.13);color:var(--red)}.ghost{background:transparent}.small{min-height:34px;padding:7px 11px;font-size:13px}
+    input,textarea,select{width:100%;min-height:44px;border:1px solid var(--border);background:rgba(255,255,255,.08);color:var(--text);border-radius:16px;padding:12px 14px;outline:0;font-family:inherit;font-size:15px}textarea{resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(77,163,255,.18)}input[type=file]{display:none}.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);border:1px solid var(--border);font-size:12px;font-weight:850;white-space:nowrap}.chip.blue{color:var(--blue);background:rgba(77,163,255,.12)}.chip.green{color:var(--green);background:rgba(66,243,155,.12)}.chip.purple{color:var(--purple);background:rgba(167,124,255,.13)}.chip.orange{color:var(--orange);background:rgba(255,184,77,.13)}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;margin-bottom:20px}.hero-main{min-height:470px;padding:clamp(24px,4vw,52px);display:flex;flex-direction:column;justify-content:center;border-radius:var(--r40);position:relative;overflow:hidden}.hero-main:after{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent 35%,rgba(77,163,255,.12));mask:linear-gradient(#000,#000) content-box,linear-gradient(#000,#000);mask-composite:exclude;padding:1px}.eyebrow{align-self:flex-start;display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;color:var(--cyan);background:rgba(73,229,255,.1);border:1px solid rgba(73,229,255,.18);font-size:13px;font-weight:900;margin-bottom:18px}h1{font-size:clamp(44px,7.5vw,104px);letter-spacing:-4px;line-height:.95;margin:0 0 18px;font-weight:950}.grad{background:linear-gradient(135deg,#fff,var(--blue),var(--purple));-webkit-background-clip:text;color:transparent}.lead{font-size:18px;color:var(--sub);line-height:1.75;max-width:850px;margin:0 0 28px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.hero-side{display:grid;gap:16px}.dropzone{min-height:248px;border:1.5px dashed rgba(77,163,255,.52);border-radius:var(--r30);display:grid;place-items:center;text-align:center;padding:24px;cursor:pointer;background:rgba(77,163,255,.07);transition:.22s}.dropzone.dragover,.dropzone:hover{background:rgba(77,163,255,.13);transform:scale(1.01)}.dropzone strong{display:block;color:var(--blue);font-size:21px;margin-bottom:8px}.dropzone span{color:var(--muted);font-size:14px;line-height:1.7}.mini-panel{padding:18px;border-radius:var(--r30)}.tool-row{display:flex;gap:10px;flex-wrap:wrap}.file-list{display:grid;gap:10px;max-height:210px;overflow:auto;padding-right:2px}.file-item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid var(--border)}.file-item b{font-size:14px}.file-item span{display:block;color:var(--muted);font-size:12px;margin-top:2px}.status{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(77,163,255,.13);color:var(--blue)}.status.ok{background:rgba(66,243,155,.13);color:var(--green)}.status.warn{background:rgba(255,184,77,.13);color:var(--orange)}.progress{height:7px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.10);margin-top:12px}.progress i{display:block;width:0;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:.2s}
+    .bento{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;grid-auto-rows:132px;gap:14px;margin-bottom:20px}.stat{padding:18px;border-radius:26px;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow2);position:relative;overflow:hidden}.stat.large{grid-column:span 2;grid-row:span 2}.stat span{color:var(--muted);font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.5px}.stat b{display:block;font-size:34px;line-height:1;margin-top:10px;letter-spacing:-1px}.stat small{display:block;color:var(--muted);font-size:13px;margin-top:7px}.stat.large b{font-size:64px}.orb{position:absolute;right:-28px;bottom:-36px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--blue),transparent 65%);opacity:.22}.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0deg, rgba(255,255,255,.12) 0deg);margin-top:16px}.ring i{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);font-style:normal;font-weight:950}
+    .workspace{display:grid;grid-template-columns:320px 1fr 360px;gap:18px;align-items:start}.side,.copilot{position:sticky;top:calc(var(--top) + 26px);max-height:calc(100dvh - var(--top) - 42px);overflow:auto;border-radius:var(--r30);padding:18px}.side-title,.panel-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.side-title h2,.panel-title h2{font-size:20px;margin:0;letter-spacing:-.4px}.agent-list{display:grid;gap:8px}.agent-card,.sec-card,.list-item{border:1px solid var(--border);background:rgba(255,255,255,.06);border-radius:20px;padding:12px 13px;color:var(--sub)}.agent-card{cursor:pointer;transition:.2s}.agent-card:hover,.sec-card:hover{transform:translateY(-1px);border-color:var(--border2);background:rgba(255,255,255,.1)}.agent-card b{display:block;color:var(--text);font-size:14px}.agent-card span{display:block;color:var(--muted);font-size:12px;margin-top:4px}.sec-card{cursor:pointer}.sec-card.active{border-color:var(--blue);background:rgba(77,163,255,.12)}.sec-card b{display:block;color:var(--text);font-size:14px}.sec-card small{color:var(--muted)}.main-panel{min-width:0}.tab-panel{display:none}.tab-panel.active{display:block}.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{border:1px solid var(--border);background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.045));border-radius:var(--r30);padding:22px;box-shadow:var(--shadow2);min-width:0}.card.wide{grid-column:1/-1}.card h3{margin:0 0 12px;font-size:18px;letter-spacing:-.3px}.card p,.card li{color:var(--sub);line-height:1.75;font-size:15px}.badge{display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(77,163,255,.13);color:var(--blue);font-size:12px;font-weight:950;margin-bottom:12px}.badge.purple{color:var(--purple);background:rgba(167,124,255,.13)}.badge.green{color:var(--green);background:rgba(66,243,155,.13)}.badge.orange{color:var(--orange);background:rgba(255,184,77,.13)}.empty{padding:46px 16px;text-align:center;color:var(--muted);border:1.5px dashed var(--border);border-radius:var(--r30)}.list{display:grid;gap:10px}.list-item b{color:var(--text)}.keyword-cloud{display:flex;flex-wrap:wrap;gap:8px}.keyword{min-height:34px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.08);padding:7px 12px;color:var(--text);font-weight:850;cursor:pointer}.chart{height:430px;border-radius:var(--r30);border:1px solid var(--border);background:rgba(255,255,255,.055);overflow:hidden}.chart.tall{height:590px}.universe{position:relative;height:620px;border-radius:var(--r30);overflow:hidden;border:1px solid var(--border);background:radial-gradient(circle at 50% 30%,rgba(77,163,255,.16),rgba(0,0,0,.08) 44%,rgba(0,0,0,.35))}.universe canvas{display:block}.universe-info{position:absolute;left:16px;bottom:16px;right:16px;border-radius:22px;background:rgba(0,0,0,.34);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18);padding:14px;color:#fff}.editor-layout{display:grid;grid-template-columns:1fr 330px;gap:16px}.paper-editor{min-height:760px;max-height:900px;overflow:auto;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:var(--r30);padding:44px;outline:0;font-size:17px;line-height:1.95}.paper-editor h1{font-size:38px;letter-spacing:-1.2px;line-height:1.15}.paper-editor h2{font-size:24px;margin-top:40px;padding-bottom:10px;border-bottom:1px solid var(--border)}.paper-editor p{color:var(--sub)}mark{background:rgba(255,216,77,.55);color:inherit;border-radius:5px;padding:0 4px}.copilot h2{margin:0 0 10px;font-size:20px}.copilot p{color:var(--muted);font-size:13px;line-height:1.65}.prompt-list{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.answer{max-height:360px;overflow:auto}.qa-box{display:grid;gap:10px}.mobile-nav{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:90;display:none;grid-template-columns:repeat(5,1fr);gap:4px;padding:7px;border-radius:26px;background:rgba(10,14,26,.78);backdrop-filter:blur(28px);border:1px solid var(--border);box-shadow:var(--shadow)}.mobile-nav button{min-height:52px;padding:6px 4px;border:0;background:transparent;border-radius:18px;color:var(--muted);flex-direction:column;font-size:11px}.mobile-nav button strong{font-size:18px}.mobile-nav button.active{background:rgba(77,163,255,.14);color:var(--blue)}.toast{position:fixed;left:50%;bottom:calc(36px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:120;background:rgba(8,11,20,.9);border:1px solid rgba(255,255,255,.18);box-shadow:var(--shadow);backdrop-filter:blur(20px);color:#fff;padding:12px 20px;border-radius:999px;font-weight:850;opacity:0;pointer-events:none;transition:.25s;max-width:min(760px,calc(100% - 28px));text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:1240px){.hero,.workspace,.editor-layout{grid-template-columns:1fr}.side,.copilot{position:relative;top:0;max-height:none}.bento{grid-template-columns:repeat(2,1fr)}.stat.large{grid-column:span 2}.topbar{border-radius:28px;align-items:flex-start;flex-direction:column}.nav{max-width:100%;width:100%}}
+    @media(max-width:760px){.app{width:100%;padding:10px 10px calc(88px + env(safe-area-inset-bottom))}.topbar{top:0;margin:0 -10px 12px;border-radius:0 0 26px 26px;padding:calc(9px + env(safe-area-inset-top)) 14px 10px;flex-direction:row;align-items:center}.brand small{display:none}.nav{display:none}.hero-main{min-height:auto;padding:24px 18px;border-radius:28px}h1{font-size:44px;letter-spacing:-2px}.lead{font-size:15px}.hero-actions .btn{flex:1 1 100%}.dropzone{min-height:190px}.bento{display:flex;overflow-x:auto;gap:10px;margin-left:-10px;margin-right:-10px;padding:0 10px 4px;scroll-snap-type:x proximity}.stat,.stat.large{min-width:155px;grid-column:auto;grid-row:auto;scroll-snap-align:start}.stat.large{min-width:230px}.stat.large b{font-size:42px}.stat b{font-size:27px}.card-grid{grid-template-columns:1fr}.card{padding:18px;border-radius:24px}.side{display:none}.copilot{display:block;border-radius:24px}.chart{height:340px}.chart.tall,.universe{height:480px}.paper-editor{padding:22px;font-size:15px;min-height:65dvh}.paper-editor h1{font-size:28px}.mobile-nav{display:grid}.toast{bottom:calc(86px + env(safe-area-inset-bottom));border-radius:18px}}
+    @media(max-width:390px){.mobile-nav{grid-template-columns:repeat(3,1fr);min-height:104px}.app{padding-bottom:calc(132px + env(safe-area-inset-bottom))}.toast{bottom:calc(128px + env(safe-area-inset-bottom))}}
+
+
+    /* Compact + Paper Library upgrade */
+    .app{width:min(1280px,calc(100% - 44px));padding:12px 0 calc(72px + env(safe-area-inset-bottom))}
+    .topbar{--top:62px;min-height:62px;padding:9px 13px;margin-bottom:14px}
+    .brand{min-width:210px}.logo{width:36px;height:36px;border-radius:12px}.brand b{font-size:15px}.brand small{font-size:11px}
+    .nav button{padding:8px 12px;font-size:13px}.nav{max-width:690px}
+    button,.btn{min-height:38px;padding:8px 13px;font-size:14px}.small{min-height:30px;padding:6px 9px;font-size:12px}
+    input,textarea,select{min-height:40px;padding:10px 12px;font-size:14px;border-radius:14px}
+    .hero{grid-template-columns:1.08fr .92fr;gap:14px;margin-bottom:14px}.hero-main{min-height:330px;padding:clamp(22px,3.2vw,36px);border-radius:30px}
+    .eyebrow{padding:6px 10px;font-size:12px;margin-bottom:12px}h1{font-size:clamp(38px,5.8vw,76px);letter-spacing:-3px;margin-bottom:12px}.lead{font-size:15.5px;line-height:1.68;margin-bottom:20px}
+    .hero-side{gap:10px}.mini-panel{padding:14px;border-radius:22px}.dropzone{min-height:156px;border-radius:22px;padding:18px}.dropzone strong{font-size:17px}.dropzone span{font-size:12.5px}
+    .file-list{max-height:145px}.file-item{padding:9px 11px;border-radius:15px}.file-item b{font-size:13px}.file-item span{font-size:11px}.status{font-size:11px;padding:4px 8px}
+    .bento{grid-template-columns:1.05fr repeat(3,1fr);grid-auto-rows:104px;gap:10px;margin-bottom:14px}.stat{padding:14px;border-radius:20px}.stat b{font-size:28px;margin-top:7px}.stat.large b{font-size:46px}.ring{width:78px;height:78px;right:14px;bottom:14px}.ring i{width:58px;height:58px}.orb{width:108px;height:108px}
+    .workspace{grid-template-columns:258px minmax(0,1fr) 294px;gap:14px}.side,.copilot{top:78px;max-height:calc(100dvh - 92px);border-radius:24px;padding:14px}.side-title h2,.copilot h2{font-size:16px}.agent-card,.sec-card,.list-item{padding:10px 11px;border-radius:15px}.agent-card b,.sec-card b{font-size:13px}.agent-card span,.sec-card small,.copilot p{font-size:12px}
+    .card{padding:16px;border-radius:22px}.card h3{font-size:17px}.card p,.card li{font-size:14px;line-height:1.68}.card-grid{gap:12px}.chart{height:380px}.chart.tall{height:500px}.universe{height:520px}.paper-editor{padding:28px;min-height:600px;max-height:720px;font-size:15.5px;line-height:1.82;border-radius:24px}.paper-editor h1{font-size:30px}.paper-editor h2{font-size:20px}
+    .paper-library{display:grid;gap:8px;max-height:170px;overflow:auto;padding-right:2px}.library-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px 10px;border-radius:15px;background:rgba(255,255,255,.07);border:1px solid var(--border)}.library-item label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;min-width:0}.library-item input[type="checkbox"]{display:inline-block;width:16px;min-width:16px;height:16px;min-height:16px;margin:2px 0 0;accent-color:var(--blue);box-shadow:none}.library-item b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}.library-item small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.library-actions{margin-bottom:9px}.helper{margin:9px 0 0;color:var(--muted);font-size:11.5px;line-height:1.55}.lib-delete{min-height:28px;padding:4px 8px;font-size:11px;color:var(--red);background:rgba(255,90,104,.10);border:0}
+    @media(max-width:1240px){.app{width:min(100% - 28px,1080px)}.workspace{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.bento{grid-template-columns:repeat(2,1fr)}.side,.copilot{top:0;max-height:none}.paper-library{max-height:220px}}
+    @media(max-width:760px){.app{width:100%;padding:8px 10px calc(82px + env(safe-area-inset-bottom))}.hero-main{padding:20px 16px}.topbar{min-height:54px}.brand{min-width:auto}.logo{width:34px;height:34px}h1{font-size:38px;letter-spacing:-2px}.lead{font-size:14px}.dropzone{min-height:138px}.bento{gap:8px}.stat,.stat.large{min-width:142px}.stat.large{min-width:210px}.chart{height:310px}.chart.tall,.universe{height:420px}.card{padding:15px}.paper-editor{padding:18px;min-height:62dvh}.paper-library{max-height:190px}.library-item b{max-width:230px}}
+
+  </style>
+</head>
+<body>
+<canvas id="neuralBg"></canvas><div class="aurora"></div>
+<div class="app">
+  <header class="topbar glass">
+    <div class="brand"><div class="logo">R</div><div><b>Paper Reader OS X</b><small>Research Intelligence System</small></div></div>
+    <nav class="nav" id="desktopNav">
+      <button class="active" data-tab="reader">AI 速读</button>
+      <button data-tab="graph">知识图谱</button>
+      <button data-tab="review">多论文综述</button>
+      <button data-tab="universe">3D 宇宙</button>
+      <button data-tab="editor">编辑器</button>
+    </nav>
+    <button class="btn ghost" id="themeBtn">外观</button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-main glass">
+      <span class="eyebrow">✦ V2 + V3 + V4 Research OS</span>
+      <h1>Read.<br><span class="grad">Map.</span><br>Defend.</h1>
+      <p class="lead">把 PDF / DOCX / PPTX / XLSX / TXT / 图片 OCR 变成 AI 速读、本地 RAG 问答、多论文对比、文献矩阵、研究缺口、交互知识图谱与 3D 知识宇宙。</p>
+      <div class="hero-actions">
+        <label class="btn primary" for="fileInput">上传论文 / 多文档</label>
+        <button class="btn" id="loadSampleBtn">载入示例</button>
+        <button class="btn" id="exportMdBtn">导出研究笔记</button>
+        <button class="btn danger" id="clearBtn">重置</button>
+      </div>
+    </div>
+    <div class="hero-side">
+      <div class="mini-panel glass">
+        <label class="dropzone" id="dropzone" for="fileInput"><div><strong>拖拽论文到这里</strong><span>支持批量上传。V3 会自动做多论文对比与综述；V4 会生成可交互 3D 知识宇宙。</span></div></label>
+        <input id="fileInput" type="file" multiple accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md,.markdown,.html,.htm,.json,.xml,.rtf,.epub,.jpg,.jpeg,.png,.webp,.bmp" />
+        <div class="progress"><i id="progressBar"></i></div>
+      </div>
+      <div class="mini-panel glass">
+        <div class="side-title"><h2>文件读取中心</h2><span class="chip blue" id="fileCountLabel">0 文件</span></div>
+        <div class="file-list" id="fileList"><div class="empty" style="padding:28px 10px">等待上传文档...</div></div>
+      </div>
+      <div class="mini-panel glass library-panel">
+        <div class="side-title"><h2>论文库</h2><span class="chip green" id="libraryCountLabel">0 已存储</span></div>
+        <div class="tool-row library-actions">
+          <button class="btn small primary" id="analyzeLibraryBtn">分析选中</button>
+          <button class="btn small" id="selectAllLibraryBtn">全选/反选</button>
+          <button class="btn small danger" id="clearLibraryBtn">清空库</button>
+        </div>
+        <div class="paper-library" id="libraryList"><div class="empty" style="padding:18px 10px">上传后会自动存入本地论文库。</div></div>
+        <p class="helper">论文文本会保存在浏览器 IndexedDB，本机可长期保留；多选后可生成综述、图谱和 3D 宇宙。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bento">
+    <div class="stat large"><span>Research Score</span><b id="scoreText">0%</b><small>结构、方法、证据、创新综合评分</small><div class="ring" id="scoreRing"><i>0%</i></div><div class="orb"></div></div>
+    <div class="stat"><span>Documents</span><b id="docText">0</b><small>已读取论文</small></div>
+    <div class="stat"><span>Words</span><b id="wordText">0</b><small>总字数估算</small></div>
+    <div class="stat"><span>Sections</span><b id="secText">0</b><small>自动章节</small></div>
+    <div class="stat"><span>Keywords</span><b id="keyText">0</b><small>概念节点</small></div>
+    <div class="stat"><span>Citations</span><b id="refText">0</b><small>参考文献 / DOI</small></div>
+    <div class="stat"><span>RAG Chunks</span><b id="chunkText">0</b><small>本地检索片段</small></div>
+  </section>
+
+  <main class="workspace">
+    <aside class="side glass">
+      <div class="side-title"><h2>AI Research Agent</h2><button class="btn small" id="bookmarkBtn">书签</button></div>
+      <div class="agent-list">
+        <div class="agent-card" data-agent="seven"><b>📄 论文七问</b><span>对象 / 问题 / 方法 / 数据 / 结论 / 创新 / 局限</span></div>
+        <div class="agent-card" data-agent="review"><b>📚 生成综述</b><span>多论文对比、研究脉络与研究缺口</span></div>
+        <div class="agent-card" data-agent="defense"><b>🎤 答辩助手</b><span>3 分钟陈述、PPT结构、导师追问</span></div>
+        <div class="agent-card" data-agent="improve"><b>✨ 写作优化</b><span>结构、证据、方法、表达修改建议</span></div>
+      </div>
+      <div style="height:14px"></div>
+      <input id="searchInput" placeholder="搜索并高亮：研究方法" />
+      <div style="height:14px"></div>
+      <div class="side-title"><h2>目录结构</h2><span class="chip" id="sectionMini">0</span></div>
+      <div class="agent-list" id="sectionList"><div class="empty" style="padding:26px 10px">等待上传...</div></div>
+    </aside>
+
+    <section class="main-panel">
+      <section class="tab-panel active" id="readerPanel">
+        <div class="card-grid" id="readerContent"><div class="empty card wide">上传论文或载入示例后，这里会生成 V2 AI 速读。</div></div>
+      </section>
+      <section class="tab-panel" id="graphPanel">
+        <div class="card wide"><div class="panel-title"><h2>V4 交互知识图谱</h2><div class="tool-row"><button class="btn small" id="resetGraphBtn">重绘</button><button class="btn small" id="exportJsonBtn">导出 JSON</button></div></div><div class="chart tall" id="knowledgeGraph"></div></div>
+      </section>
+      <section class="tab-panel" id="reviewPanel">
+        <div class="card-grid" id="reviewContent"><div class="empty card wide">上传多篇论文后，会生成 V3 多论文对比、综述和研究缺口。</div></div>
+      </section>
+      <section class="tab-panel" id="universePanel">
+        <div class="card wide"><div class="panel-title"><h2>V4 3D Knowledge Universe</h2><span class="chip purple">拖拽旋转 · 滚轮缩放 · 点击节点</span></div><div class="universe" id="universe"><div class="universe-info" id="universeInfo"><b>3D 宇宙等待生成</b><br>上传论文后自动把标题、关键词、章节与参考文献转成星系节点。</div></div></div>
+      </section>
+      <section class="tab-panel" id="editorPanel">
+        <div class="editor-layout">
+          <article class="paper-editor" id="paperEditor" contenteditable="true"><div class="empty">等待上传文档...</div></article>
+          <div class="card"><h3>编辑与再分析</h3><p style="color:var(--muted)">可直接修改左侧正文，然后重新分析生成图谱和答辩稿。</p><div class="tool-row"><button class="btn primary" id="reanalyzeBtn">重新分析</button><button class="btn" id="copyNoteBtn">复制笔记</button></div><div style="height:12px"></div><textarea id="noteInput" placeholder="添加阅读笔记 / 导师意见" style="min-height:140px"></textarea><div style="height:10px"></div><button class="btn green" id="addNoteBtn">添加笔记</button><div class="list" id="noteList" style="margin-top:12px"></div></div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="copilot glass">
+      <h2>Copilot</h2>
+      <p>这是本地 RAG 版本：不会调用外部 API，会在你的文档切片中检索最相关段落，再组合回答。</p>
+      <div class="prompt-list">
+        <button class="btn small" data-q="这篇论文的研究方法是什么？">研究方法</button>
+        <button class="btn small" data-q="这篇论文的创新点是什么？">创新点</button>
+        <button class="btn small" data-q="帮我生成答辩陈述">答辩稿</button>
+        <button class="btn small" data-q="这批论文能形成什么综述主题？">综述主题</button>
+      </div>
+      <div class="qa-box"><textarea id="qaInput" placeholder="问论文任何问题：例如，研究缺口是什么？" style="min-height:92px"></textarea><button class="btn primary" id="qaBtn">本地检索回答</button></div>
+      <div class="list answer" id="qaAnswer" style="margin-top:14px"><div class="list-item">等待提问...</div></div>
+    </aside>
+  </main>
+</div>
+
+<nav class="mobile-nav" id="mobileNav">
+  <button class="active" data-tab="reader"><strong>⚡</strong>速读</button>
+  <button data-tab="graph"><strong>🧠</strong>图谱</button>
+  <button data-tab="review"><strong>📚</strong>综述</button>
+  <button data-tab="universe"><strong>🌌</strong>宇宙</button>
+  <button data-tab="editor"><strong>✍️</strong>编辑</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  }
+
+  const $ = id => document.getElementById(id);
+  const state = {
+    library: [], activeIds: [],
+    docs: [], rawText:'', title:'Paper Reader OS X', sections:[], keywords:[], terms:[], figures:[], refs:[], dois:[], keySentences:[], chunks:[], graph:{nodes:[],links:[]}, scores:{}, seven:{}, review:{}, defense:{}, notes:[], selected:-1, echarts:null, three:null
+  };
+
+  const typeMap = {title:'标题',abstract:'摘要',keyword:'关键词',intro:'绪论',theory:'理论',method:'方法',user:'用户研究',design:'设计实践',result:'结果',discussion:'讨论',conclusion:'结论',reference:'文献',other:'正文'};
+  const stopWords = new Set('研究 设计 论文 本文 通过 进行 基于 分析 方法 系统 用户 内容 相关 可以 具有 实现 主要 需要 问题 过程 结果 提出 探讨 视角 发展 影响 文档 文件 章节 数据 以及 由于 因此 一个 一种 采用 结合 构建 形成 提升 优化 and the for with this that from paper study design method based analysis research into using use are was were can'.split(/\s+/));
+
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+  function escapeHtml(str){ return String(str||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function stripHtml(html){ const d=document.createElement('div'); d.innerHTML=html; return d.innerText||d.textContent||''; }
+  function stripXmlTags(xml){ return xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); }
+  function stripRtf(rtf){ return rtf.replace(/\\'[0-9a-fA-F]{2}/g,' ').replace(/\\[a-z]+\d* ?/g,' ').replace(/[{}]/g,' ').replace(/\s+/g,' ').trim(); }
+  function normalizeText(text){ return (text||'').replace(/\r/g,'\n').replace(/\u00A0/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); }
+  function countWords(text){ return (text.match(/[\u4e00-\u9fa5]/g)||[]).length + (text.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)?/g)||[]).length; }
+  function extOf(name){ return (name.split('.').pop()||'').toLowerCase(); }
+  function bytes(n){ if(n<1024)return n+' B'; if(n<1024*1024)return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(1)+' MB'; }
+  function setProgress(v){ $('progressBar').style.width=Math.max(0,Math.min(100,v))+'%'; }
+  function splitSentences(text){ return normalizeText(text).replace(/\n+/g,'。').split(/(?<=[。！？!?；;])\s*|(?<=\.)\s+(?=[A-Z])/).map(s=>s.trim()).filter(s=>s.length>12&&s.length<320); }
+  function tokenize(text){ const zh=(text.match(/[\u4e00-\u9fa5]{2,8}/g)||[]).filter(w=>!stopWords.has(w)); const en=(text.match(/[A-Za-z][A-Za-z-]{3,}/g)||[]).map(w=>w.toLowerCase()).filter(w=>!stopWords.has(w)); return [...zh,...en]; }
+
+  async function readPdf(file){ const typed=new Uint8Array(await file.arrayBuffer()); const pdf=await pdfjsLib.getDocument({data:typed}).promise; let text=''; for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const content=await page.getTextContent(); text+=`\n\n--- PDF Page ${i} ---\n`+content.items.map(x=>x.str).join(' '); setProgress(Math.round(i/pdf.numPages*88)); } return text; }
+  async function readSpreadsheet(file){ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}); return wb.SheetNames.map(n=>`\n\n# Sheet: ${n}\n`+XLSX.utils.sheet_to_csv(wb.Sheets[n])).join('\n'); }
+  async function readPptx(file){ const zip=await JSZip.loadAsync(await file.arrayBuffer()); const slides=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>+a.match(/slide(\d+)/)[1]-+b.match(/slide(\d+)/)[1]); let text=''; for(const name of slides){ const xml=await zip.files[name].async('text'); const no=name.match(/slide(\d+)/)[1]; const parts=[...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map(m=>stripHtml(m[1])); text+=`\n\n# Slide ${no}\n${parts.join('\n')}`; } return text; }
+  async function readEpub(file){ const zip=await JSZip.loadAsync(await file.arrayBuffer()); const htmls=Object.keys(zip.files).filter(n=>/\.(xhtml|html|htm)$/i.test(n)).sort(); let text=''; for(const n of htmls.slice(0,80)) text+=`\n\n# ${n}\n${stripHtml(await zip.files[n].async('text'))}`; return text; }
+  async function readImageOcr(file){ const result=await Tesseract.recognize(file,'chi_sim+eng',{logger:m=>{ if(m.status==='recognizing text') setProgress(Math.round((m.progress||0)*100)); }}); return result.data.text; }
+  async function readFile(file,index,total){ const ext=extOf(file.name); updateFileStatus(file.name,'读取中'); try{ let text=''; if(['txt','md','markdown','csv','log'].includes(ext)) text=await file.text(); else if(['html','htm'].includes(ext)) text=stripHtml(await file.text()); else if(ext==='rtf') text=stripRtf(await file.text()); else if(ext==='json'){ text=await file.text(); try{text=JSON.stringify(JSON.parse(text),null,2)}catch(e){} } else if(ext==='xml') text=stripXmlTags(await file.text()); else if(ext==='docx') text=(await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value; else if(ext==='pdf') text=await readPdf(file); else if(['xlsx','xls'].includes(ext)) text=await readSpreadsheet(file); else if(ext==='pptx') text=await readPptx(file); else if(ext==='epub') text=await readEpub(file); else if(['jpg','jpeg','png','webp','bmp'].includes(ext)) text=await readImageOcr(file); else text=await file.text(); text=normalizeText(text); if(!text) throw new Error('未提取到文本'); updateFileStatus(file.name,'完成','ok'); setProgress(Math.round((index+1)/total*100)); return {name:file.name,ext,size:file.size,text,words:countWords(text),status:'ok'}; }catch(err){ updateFileStatus(file.name,'失败','warn'); return {name:file.name,ext,size:file.size,text:'',words:0,status:'error',error:err.message}; } }
+  function preRender(files){ $('fileCountLabel').textContent=files.length+' 文件'; $('fileList').innerHTML=[...files].map(f=>`<div class="file-item" data-file="${escapeHtml(f.name)}"><div><b>${escapeHtml(f.name)}</b><span>${extOf(f.name).toUpperCase()} · ${bytes(f.size||0)}</span></div><span class="status">等待</span></div>`).join(''); }
+  function updateFileStatus(name,status,cls=''){ const el=[...document.querySelectorAll('.file-item')].find(x=>x.dataset.file===name); if(!el)return; const p=el.querySelector('.status'); p.textContent=status; p.className='status '+cls; }
+
+  const DB_NAME='PaperReaderOSXLibraryV2';
+  const DB_STORE='papers';
+  const META_KEY='paperReaderOSXMeta';
+  function makeDocId(name){ return 'paper_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9)+'_'+name.replace(/\W+/g,'').slice(0,8); }
+  function openLibraryDB(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window)) return reject(new Error('当前浏览器不支持 IndexedDB'));
+      const req=indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE,{keyPath:'id'}); };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });
+  }
+  async function dbPutDoc(doc){ const db=await openLibraryDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).put(doc); tx.oncomplete=()=>{db.close();resolve();}; tx.onerror=()=>{db.close();reject(tx.error);}; }); }
+  async function dbGetDocs(){ const db=await openLibraryDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readonly'); const req=tx.objectStore(DB_STORE).getAll(); req.onsuccess=()=>resolve(req.result||[]); req.onerror=()=>reject(req.error); tx.oncomplete=()=>db.close(); }); }
+  async function dbDeleteDoc(id){ const db=await openLibraryDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).delete(id); tx.oncomplete=()=>{db.close();resolve();}; tx.onerror=()=>{db.close();reject(tx.error);}; }); }
+  async function dbClearDocs(){ const db=await openLibraryDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readwrite'); tx.objectStore(DB_STORE).clear(); tx.oncomplete=()=>{db.close();resolve();}; tx.onerror=()=>{db.close();reject(tx.error);}; }); }
+  function getMeta(){ try{return JSON.parse(localStorage.getItem(META_KEY)||'{}')}catch(e){return{}} }
+  function saveMeta(){ try{localStorage.setItem(META_KEY,JSON.stringify({activeIds:state.activeIds,notes:state.notes,updatedAt:Date.now()}));}catch(e){} }
+  function syncActiveDocs(){ const active=new Set(state.activeIds); state.docs=state.library.filter(d=>active.has(d.id)); }
+  function renderLibrary(){
+    const box=$('libraryList'); if(!box)return;
+    $('libraryCountLabel').textContent=state.library.length+' 已存储';
+    if(!state.library.length){ box.innerHTML='<div class="empty" style="padding:18px 10px">上传后会自动存入本地论文库。</div>'; return; }
+    const active=new Set(state.activeIds);
+    box.innerHTML=state.library.map(d=>`<div class="library-item" data-lib="${escapeHtml(d.id)}"><label><input type="checkbox" data-lib-select value="${escapeHtml(d.id)}" ${active.has(d.id)?'checked':''}/><span><b title="${escapeHtml(d.name)}">${escapeHtml(d.name)}</b><small>${escapeHtml((d.ext||extOf(d.name)).toUpperCase())} · ${d.words||0} 字 · ${new Date(d.addedAt||Date.now()).toLocaleDateString()}</small></span></label><button class="btn small lib-delete" data-lib-delete="${escapeHtml(d.id)}">删除</button></div>`).join('');
+    document.querySelectorAll('[data-lib-delete]').forEach(btn=>btn.onclick=async()=>{ await removeLibraryDoc(btn.dataset.libDelete); });
+  }
+  async function removeLibraryDoc(id){
+    await dbDeleteDoc(id);
+    state.library=state.library.filter(d=>d.id!==id);
+    state.activeIds=state.activeIds.filter(x=>x!==id);
+    syncActiveDocs(); renderLibrary(); saveMeta();
+    if(state.docs.length){ preRender(state.docs.map(d=>({name:d.name,size:d.size||0}))); state.docs.forEach(d=>updateFileStatus(d.name,'已选','ok')); analyzeAll(); }
+    else{ preRender([]); $('fileList').innerHTML='<div class="empty" style="padding:28px 10px">等待上传文档...</div>'; resetAnalysisUI(); }
+    toast('已从论文库删除。');
+  }
+  function getCheckedLibraryIds(){ return [...document.querySelectorAll('[data-lib-select]:checked')].map(x=>x.value); }
+  function analyzeSelectedLibrary(){
+    const ids=getCheckedLibraryIds();
+    if(!ids.length)return toast('请至少选择一篇论文。');
+    state.activeIds=ids; syncActiveDocs(); renderLibrary(); saveMeta();
+    preRender(state.docs.map(d=>({name:d.name,size:d.size||0}))); state.docs.forEach(d=>updateFileStatus(d.name,'已选','ok'));
+    analyzeAll();
+  }
+  function toggleSelectLibrary(){
+    const checks=[...document.querySelectorAll('[data-lib-select]')]; if(!checks.length)return toast('论文库为空。');
+    const all=checks.every(c=>c.checked); checks.forEach(c=>c.checked=!all);
+    toast(all?'已取消全选。':'已全选论文库。');
+  }
+  function resetAnalysisUI(){
+    Object.assign(state,{rawText:'',title:'Paper Reader OS X',sections:[],keywords:[],terms:[],figures:[],refs:[],dois:[],keySentences:[],chunks:[],graph:{nodes:[],links:[]},scores:{},seven:{},review:{},defense:{},selected:-1});
+    renderStats(); renderSections(); renderReader(); renderReview(); renderEditor(); renderNotes();
+    if(state.echarts){ state.echarts.clear(); }
+    $('universeInfo').innerHTML='<b>3D 宇宙等待生成</b><br>上传论文后自动把标题、关键词、章节与参考文献转成星系节点。';
+  }
+  async function handleFiles(files){
+    const arr=[...files]; if(!arr.length)return; preRender(arr); toast('开始读取并存储 '+arr.length+' 个文件');
+    const imported=[];
+    for(let i=0;i<arr.length;i++){
+      const doc=await readFile(arr[i],i,arr.length);
+      if(doc.status==='ok'){
+        doc.id=makeDocId(doc.name); doc.addedAt=Date.now(); doc.source='upload';
+        imported.push(doc);
+        try{ await dbPutDoc(doc); }catch(e){ toast('存储失败：'+e.message); }
+      }
+    }
+    if(!imported.length) return toast('没有成功读取的文档');
+    const known=new Set(state.library.map(d=>d.id));
+    state.library=[...imported,...state.library.filter(d=>!known.has(d.id))].sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+    const active=new Set(state.activeIds.length?state.activeIds:state.library.map(d=>d.id));
+    imported.forEach(d=>active.add(d.id)); state.activeIds=[...active];
+    syncActiveDocs(); renderLibrary(); saveMeta();
+    preRender(state.docs.map(d=>({name:d.name,size:d.size||0}))); state.docs.forEach(d=>updateFileStatus(d.name,'已存储','ok'));
+    analyzeAll(); setTimeout(()=>setProgress(0),1000);
+  }
+
+  function cleanHeading(line){ return line.replace(/^#+\s*/,'').replace(/^第[一二三四五六七八九十百\d]+[章节篇]\s*/,'').replace(/^[一二三四五六七八九十]+[、.]\s*/,'').replace(/^\d+(\.\d+)*[、.)]?\s*/,'').trim(); }
+  function isHeading(line){ const s=line.trim(); if(!s||s.length>62)return false; return /^#+\s+/.test(s)||/^第[一二三四五六七八九十百\d]+[章节篇]/.test(s)||/^[一二三四五六七八九十]+[、.]/.test(s)||/^\d+(\.\d+)*[、.)]?\s*[\u4e00-\u9fa5A-Za-z]/.test(s)||/^(摘要|Abstract|关键词|Keywords|引言|绪论|研究背景|文献综述|相关研究|理论基础|研究方法|方法|用户研究|需求分析|设计策略|设计实践|系统设计|实验|结果分析|可用性测试|讨论|结论|总结与展望|参考文献|References|致谢)$/i.test(s); }
+  function inferType(title){ const t=title.toLowerCase(); if(/摘要|abstract/.test(t))return'abstract'; if(/关键词|keywords?/.test(t))return'keyword'; if(/绪论|引言|背景|introduction|background/.test(t))return'intro'; if(/理论|概念|文献|综述|相关研究|literature|theory/.test(t))return'theory'; if(/方法|method|路径|模型|流程|实验|experiment/.test(t))return'method'; if(/用户|访谈|问卷|调研|需求|user|survey|interview/.test(t))return'user'; if(/设计|实践|系统|原型|界面|交互|策略|design|prototype/.test(t))return'design'; if(/结果|分析|评估|测试|数据|result|analysis|evaluation/.test(t))return'result'; if(/讨论|discussion/.test(t))return'discussion'; if(/结论|总结|展望|conclusion/.test(t))return'conclusion'; if(/参考文献|references|bibliography/.test(t))return'reference'; return'other'; }
+  function parseSections(text){ const lines=normalizeText(text).split('\n').map(l=>l.trim()).filter(Boolean); if(!lines.length)return[]; const first=lines.find(l=>l.length>3)||lines[0]; const title=cleanHeading(first).slice(0,120); const secs=[{title,type:'title',content:first,words:countWords(first),doc:'all'}]; let cur=null; for(let i=lines.indexOf(first)+1;i<lines.length;i++){ const line=lines[i]; if(isHeading(line)){ if(cur){cur.content=cur.buffer.join('\n').trim();cur.words=countWords(cur.content);delete cur.buffer;secs.push(cur);} const h=cleanHeading(line)||line; cur={title:h,type:inferType(h),buffer:[],doc:'all'}; }else if(cur)cur.buffer.push(line); else cur={title:'正文导入',type:'other',buffer:[line],doc:'all'}; } if(cur){cur.content=cur.buffer.join('\n').trim();cur.words=countWords(cur.content);delete cur.buffer;secs.push(cur);} if(secs.length<=2 && text.length>600){ const chunks=normalizeText(text).split(/\n{2,}/).filter(Boolean).slice(0,36); return [{title,type:'title',content:title,words:countWords(title),doc:'all'},...chunks.map((p,i)=>({title:i===0?'正文导入':`段落 ${i+1}`,type:'other',content:p,words:countWords(p),doc:'all'}))]; } return secs; }
+  function extractAbstract(text,secs){ const sec=secs.find(s=>s.type==='abstract'); if(sec?.content)return sec.content.slice(0,1100); const m=text.match(/摘要[:：\s]*([\s\S]{80,1100}?)(关键词|关键字|Abstract|第[一二三四五六七八九十\d]+[章节]|1[、.]\s*|引言|绪论)/i); if(m)return m[1].trim(); return splitSentences(text).slice(0,4).join('')||'未识别到摘要。'; }
+  function extractKeywords(text,secs){ const explicit=[]; const sec=secs.find(s=>s.type==='keyword'||/关键词|keywords/i.test(s.title)); if(sec) sec.content.replace(/关键词|关键字|keywords|：|:/ig,' ').split(/[，,；;、\s]+/).filter(x=>x&&x.length<=20).forEach(x=>explicit.push(x)); const m=text.match(/关键词[:：\s]*([^\n。]{6,160})/i); if(m)m[1].split(/[，,；;、\s]+/).filter(x=>x&&x.length<=20).forEach(x=>explicit.push(x)); if(explicit.length>=3)return [...new Set(explicit)].slice(0,36); const pool={}; tokenize(text).forEach(w=>pool[w]=(pool[w]||0)+1); return Object.entries(pool).sort((a,b)=>b[1]-a[1]).slice(0,36).map(([k])=>k); }
+  function extractRefs(text,secs){ const refs=[]; const sec=secs.find(s=>s.type==='reference'); if(sec)sec.content.split('\n').map(x=>x.trim()).filter(x=>x.length>8).forEach(x=>refs.push(x.slice(0,260))); (text.match(/\[\d+\][^\n]{8,260}/g)||[]).forEach(x=>refs.push(x.trim())); return [...new Set(refs)].slice(0,80); }
+  function extractDOI(text){ return [...new Set((text.match(/10\.\d{4,9}\/[\w.()/:;\-]+/gi)||[]).map(x=>x.replace(/[.,;，。；]+$/,'')))].slice(0,50); }
+  function extractFigures(text){ const hits=[]; normalizeText(text).split('\n').forEach(line=>{ if(/(图|表|Figure|Table)\s*\d+|图[一二三四五六七八九十]+|表[一二三四五六七八九十]+/.test(line))hits.push(line.slice(0,170)); }); return [...new Set(hits)].slice(0,30); }
+  function extractKeySentences(text,keywords){ return splitSentences(text).map(s=>({s,score:keywords.reduce((n,k)=>n+(s.includes(k)?2:0),0)+(['本文','本研究','结果表明','研究发现','提出','构建','创新','贡献','方法','结论','不足','展望'].some(m=>s.includes(m))?5:0)})).filter(x=>x.score>1).sort((a,b)=>b.score-a.score).slice(0,12).map(x=>x.s); }
+  function chooseSentence(patterns,text,label){ const sents=splitSentences(text); const hit=sents.find(s=>patterns.some(p=>p.test(s))); if(hit)return hit; return `暂未直接识别到${label}，建议补充对应章节或在 Copilot 中追问。`; }
+  function buildChunks(){ const chunks=[]; state.docs.forEach((doc,di)=>{ const parts=normalizeText(doc.text).split(/\n{2,}|(?<=。)/).map(x=>x.trim()).filter(x=>x.length>35); let buf=''; let idx=0; for(const p of parts){ if((buf+p).length>700){ chunks.push({id:`D${di+1}-${++idx}`,doc:doc.name,text:buf,words:countWords(buf),tokens:tokenize(buf)}); buf=p; }else buf+=(buf?'\n':'')+p; } if(buf)chunks.push({id:`D${di+1}-${++idx}`,doc:doc.name,text:buf,words:countWords(buf),tokens:tokenize(buf)}); }); state.chunks=chunks; }
+  function ragSearch(query,limit=6){ const terms=tokenize(query); const qLower=query.toLowerCase(); return state.chunks.map(c=>{ const tset=new Set(c.tokens); let score=0; terms.forEach(t=>{ if(tset.has(t)||c.text.toLowerCase().includes(t.toLowerCase()))score+=3; }); state.keywords.forEach(k=>{ if(qLower.includes(k.toLowerCase())&&c.text.includes(k))score+=2; }); return {...c,score}; }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit); }
+  function scoreStructure(){ const types=new Set(state.sections.map(s=>s.type)); const checks=[types.has('abstract'),types.has('keyword'),types.has('intro'),types.has('theory'),types.has('method')||types.has('user'),types.has('design')||types.has('result'),types.has('conclusion'),state.refs.length>=6||state.dois.length>=1,state.keywords.length>=3]; return Math.round(checks.filter(Boolean).length/checks.length*100); }
+  function buildSeven(){ const text=state.rawText; const abstract=extractAbstract(text,state.sections); return {what:state.title,why:chooseSentence([/问题|痛点|不足|需求|目的|目标|价值|意义/i],abstract+'。'+text,'研究价值'),how:chooseSentence([/方法|路径|模型|框架|问卷|访谈|实验|案例|method|survey|interview/i],text,'研究方法'),data:chooseSentence([/问卷|访谈|样本|数据|案例|实验|用户|材料|sample|data/i],text,'数据材料'),result:chooseSentence([/结果|表明|发现|证明|提升|验证|结论|result|finding|conclusion/i],text,'核心结论'),new:chooseSentence([/创新|贡献|价值|构建|提出|优化|contribution|innovation/i],text,'创新点'),limit:chooseSentence([/不足|局限|限制|未来|展望|limitation|future/i],text,'局限展望')}; }
+  function buildScores(){ const types=new Set(state.sections.map(s=>s.type)); return {structure:scoreStructure(),method:types.has('method')||types.has('user')?88:46,evidence:Math.min(96,42+state.refs.length*4+state.dois.length*8+state.figures.length*4),innovation:/创新|贡献|首次|提出|构建|优化|novel|innovation/i.test(state.rawText)?82:56,readability:Math.max(48,Math.min(92,94-Math.floor((countWords(state.rawText)/Math.max(1,state.sections.length))/360)))}; }
+  function buildReview(){ const docRows=state.docs.map(doc=>{ const secs=parseSections(doc.text); const kws=extractKeywords(doc.text,secs).slice(0,8); return {name:doc.name,words:doc.words,keywords:kws,method:chooseSentence([/方法|问卷|访谈|实验|案例|模型|框架/i],doc.text,'方法'),finding:chooseSentence([/结果|表明|发现|结论|提升|验证/i],doc.text,'结论')}; }); const allKws=[...new Set(docRows.flatMap(d=>d.keywords))].slice(0,18); return {docRows,theme:allKws.slice(0,6).join(' / ')||state.title,gap:[state.scores.evidence<70?'证据支撑偏弱：可补充图表、数据或更明确的实验/调研材料。':'证据基础较好，下一步可加强变量关系与图表说明。',state.scores.method<70?'研究方法表达不足：建议单独增加研究流程图和样本说明。':'方法表达基本可读，可进一步明确样本数量与评价指标。',state.dois.length===0?'未识别 DOI：如果是学术综述，可补充 DOI、年份、期刊和作者字段。':'已识别 DOI，可进一步构建 Citation Network。'],outline:[`主题聚焦：${allKws.slice(0,5).join('、')}`,'研究现状：按理论基础、方法路径、设计实践、评价验证四层展开。','研究不足：从样本、方法、场景、技术落地和长期评估五个角度归纳。','未来方向：加入 AI 问答、知识图谱、多端适配与沉浸式空间体验。']}; }
+  function buildDefense(){ return {speech:[`各位老师好，我的论文题目是《${state.title}》。`,`本研究关注的问题是：${state.seven.why}`,`研究方法方面：${state.seven.how}`,`核心结论是：${state.seven.result}`,`创新价值在于：${state.seven.new}`,`不足与展望：${state.seven.limit}`],ppt:['封面：题目、姓名、导师、专业','研究背景：为什么要做这个课题','研究问题：本文解决什么问题','理论基础：核心概念与文献依据','研究方法：样本、流程与工具','设计实践：系统架构、交互流程与视觉方案','结果验证：测试反馈与数据分析','结论展望：创新点、局限与未来方向'],questions:['为什么选择这个研究对象？','样本量是否具有代表性？','你的创新点和已有研究相比在哪里？','方案有效性如何验证？','如果继续深化，优先优化哪部分？']}; }
+  function buildGraph(){ const nodes=[]; const links=[]; const add=(id,name,cat,value=24)=>{ if(!nodes.some(n=>n.id===id))nodes.push({id,name,category:cat,value,symbolSize:Math.max(24,Math.min(72,value))}); };
+    add('paper',state.title,'论文',68);
+    state.docs.forEach((d,i)=>{ add('doc'+i,d.name,'文档',44); links.push({source:'paper',target:'doc'+i,value:3}); });
+    state.keywords.slice(0,20).forEach((k,i)=>{ add('kw'+i,k,'关键词',30+(20-i)); links.push({source:'paper',target:'kw'+i,value:2}); });
+    state.sections.filter(s=>s.type!=='title').slice(0,22).forEach((s,i)=>{ add('sec'+i,s.title,'章节',28+Math.min(20,s.words/200)); links.push({source:'paper',target:'sec'+i,value:1}); state.keywords.slice(0,12).forEach((k,ki)=>{ if(s.content.includes(k))links.push({source:'sec'+i,target:'kw'+ki,value:1}); }); });
+    state.refs.slice(0,10).forEach((r,i)=>{ add('ref'+i,(r.match(/[\u4e00-\u9fa5A-Za-z0-9 .·-]{6,42}/)||['参考文献'])[0],'文献',24); links.push({source:'paper',target:'ref'+i,value:1}); });
+    state.graph={nodes,links}; }
+  function analyzeAll(){ state.rawText=state.docs.map((d,i)=>`# 文档 ${i+1}：${d.name}\n\n${d.text}`).join('\n\n'); state.sections=parseSections(state.rawText); state.title=cleanHeading(state.sections[0]?.title||state.docs[0]?.name||'Paper Reader OS X'); state.keywords=extractKeywords(state.rawText,state.sections); state.terms=[...new Set([...state.keywords,'用户体验','信息架构','知识图谱','论文可视化','本地RAG','多论文综述','3D知识宇宙'].filter(k=>state.rawText.includes(k)||state.keywords.includes(k)))].slice(0,36); state.figures=extractFigures(state.rawText); state.refs=extractRefs(state.rawText,state.sections); state.dois=extractDOI(state.rawText); state.keySentences=extractKeySentences(state.rawText,state.keywords); buildChunks(); state.scores=buildScores(); state.seven=buildSeven(); state.review=buildReview(); state.defense=buildDefense(); buildGraph(); renderAll(); saveLocal(); toast('V2 + V3 + V4 已生成：AI速读、综述、知识图谱和3D宇宙。'); }
+
+  function renderAll(){ renderStats(); renderSections(); renderReader(); renderReview(); renderEditor(); renderNotes(); renderKnowledgeGraph(); renderUniverse(); }
+  function renderStats(){ const words=countWords(state.rawText); const score=Math.round(Object.values(state.scores).reduce((a,b)=>a+b,0)/Math.max(1,Object.values(state.scores).length)); $('scoreText').textContent=score+'%'; $('scoreRing').style.background=`conic-gradient(var(--green) ${score*3.6}deg, rgba(255,255,255,.12) 0deg)`; $('scoreRing').innerHTML=`<i>${score}%</i>`; $('docText').textContent=state.docs.length; $('wordText').textContent=words; $('secText').textContent=state.sections.length; $('keyText').textContent=state.keywords.length; $('refText').textContent=state.refs.length+state.dois.length; $('chunkText').textContent=state.chunks.length; $('sectionMini').textContent=state.sections.length; }
+  function renderSections(){ if(!state.sections.length){$('sectionList').innerHTML='<div class="empty" style="padding:26px 10px">等待上传...</div>';return;} $('sectionList').innerHTML=state.sections.map((s,i)=>`<div class="sec-card ${i===state.selected?'active':''}" data-sec="${i}"><b>${escapeHtml(s.title)}</b><small>${typeMap[s.type]||'正文'} · ${s.words||0} 字</small></div>`).join(''); document.querySelectorAll('[data-sec]').forEach(el=>el.onclick=()=>selectSection(+el.dataset.sec)); }
+  function renderReader(){ if(!state.rawText){ $('readerContent').innerHTML='<div class="empty card wide">上传论文或载入示例后，这里会生成 V2 AI 速读。</div>'; return;} $('readerContent').innerHTML=`
+      <div class="card wide"><span class="badge">Executive Summary</span><h3>${escapeHtml(state.title)}</h3><p>${escapeHtml(extractAbstract(state.rawText,state.sections).slice(0,520))}${extractAbstract(state.rawText,state.sections).length>520?'……':''}</p><div class="keyword-cloud" style="margin-top:14px">${state.keywords.slice(0,16).map(k=>`<button class="keyword" data-key="${escapeHtml(k)}"># ${escapeHtml(k)}</button>`).join('')}</div></div>
+      <div class="card"><span class="badge">01</span><h3>研究对象</h3><p>${escapeHtml(state.seven.what)}</p></div>
+      <div class="card"><span class="badge purple">02</span><h3>研究价值</h3><p>${escapeHtml(state.seven.why)}</p></div>
+      <div class="card"><span class="badge green">03</span><h3>研究方法</h3><p>${escapeHtml(state.seven.how)}</p></div>
+      <div class="card"><span class="badge orange">04</span><h3>核心结论</h3><p>${escapeHtml(state.seven.result)}</p></div>
+      <div class="card wide"><h3>关键句提取</h3><ul>${(state.keySentences.length?state.keySentences:['暂未提取到关键句。']).map(s=>`<li>${escapeHtml(s)}</li>`).join('')}</ul></div>
+      <div class="card"><h3>质量评分</h3><div class="list">${Object.entries(state.scores).map(([k,v])=>`<div class="list-item"><b>${k}</b>：${v}%</div>`).join('')}</div></div>
+      <div class="card"><h3>修改建议</h3><div class="list">${buildImprovements().map((x,i)=>`<div class="list-item"><b>${i+1}.</b> ${escapeHtml(x)}</div>`).join('')}</div></div>`;
+      document.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>{switchTab('editor');highlightTerm(b.dataset.key);}); }
+  function buildImprovements(){ const arr=[]; const types=new Set(state.sections.map(s=>s.type)); if(!types.has('abstract'))arr.push('补充结构化摘要：背景、方法、结果、创新点。'); if(!types.has('method')&&!types.has('user'))arr.push('单独增加研究方法章节，明确样本、流程和工具。'); if(state.refs.length<8&&state.dois.length<2)arr.push('补充近五年高质量文献，并加入 DOI / 作者 / 年份。'); if(state.figures.length<2)arr.push('增加信息架构图、流程图、用户旅程图或统计图。'); if(!types.has('conclusion'))arr.push('完善结论与展望，明确局限与下一步。'); if(!arr.length)arr.push('结构较完整，建议进一步优化章节过渡、图表说明和创新点表达。'); return arr; }
+  function renderReview(){ if(!state.rawText){ $('reviewContent').innerHTML='<div class="empty card wide">上传多篇论文后，会生成 V3 多论文对比、综述和研究缺口。</div>'; return;} const rows=state.review.docRows||[]; $('reviewContent').innerHTML=`
+      <div class="card wide"><span class="badge purple">V3 Review Generator</span><h3>自动综述主题</h3><p>${escapeHtml(state.review.theme)}</p><div class="list" style="margin-top:12px">${state.review.outline.map((x,i)=>`<div class="list-item"><b>${i+1}.</b> ${escapeHtml(x)}</div>`).join('')}</div></div>
+      <div class="card wide"><h3>多论文对比矩阵</h3><div class="list">${rows.map((r,i)=>`<div class="list-item"><b>${i+1}. ${escapeHtml(r.name)}</b><br>关键词：${escapeHtml(r.keywords.join('、'))}<br>方法：${escapeHtml(r.method)}<br>结论：${escapeHtml(r.finding)}</div>`).join('')}</div></div>
+      <div class="card"><h3>研究缺口</h3><div class="list">${state.review.gap.map((x,i)=>`<div class="list-item"><b>Gap ${i+1}</b><br>${escapeHtml(x)}</div>`).join('')}</div></div>
+      <div class="card"><h3>答辩助手</h3><div class="list">${state.defense.speech.map((x,i)=>`<div class="list-item"><b>${i+1}</b> ${escapeHtml(x)}</div>`).join('')}</div></div>
+      <div class="card wide"><h3>导师可能追问</h3><div class="keyword-cloud">${state.defense.questions.map(q=>`<button class="keyword" data-ask="${escapeHtml(q)}">${escapeHtml(q)}</button>`).join('')}</div></div>`; document.querySelectorAll('[data-ask]').forEach(b=>b.onclick=()=>{ $('qaInput').value=b.dataset.ask; askCopilot(); }); }
+  function renderEditor(){ if(!state.rawText){ $('paperEditor').innerHTML='<div class="empty">等待上传文档...</div>'; return;} $('paperEditor').innerHTML=`<h1>${escapeHtml(state.title)}</h1>`+state.sections.slice(1).map((s,i)=>`<section data-section="${i+1}"><h2>${escapeHtml(s.title)}</h2>${escapeHtml(s.content).split('\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('')}</section>`).join(''); }
+  function renderNotes(){ $('noteList').innerHTML=state.notes.length?state.notes.map((n,i)=>`<div class="list-item"><b>笔记 ${i+1}</b><br>${escapeHtml(n)}</div>`).join(''):'<div class="list-item">暂无笔记。</div>'; }
+  function renderKnowledgeGraph(){ if(!window.echarts || !state.graph.nodes.length)return; const dom=$('knowledgeGraph'); if(!state.echarts)state.echarts=echarts.init(dom); const text=getComputedStyle(document.body).getPropertyValue('--text').trim(); const muted=getComputedStyle(document.body).getPropertyValue('--muted').trim(); const cats=['论文','文档','章节','关键词','文献'].map(name=>({name})); state.echarts.setOption({backgroundColor:'transparent',tooltip:{formatter:p=>p.data?.name||''},legend:{top:12,textStyle:{color:muted},data:cats.map(c=>c.name)},series:[{type:'graph',layout:'force',roam:true,draggable:true,categories:cats,label:{show:true,color:text,fontSize:12},force:{repulsion:260,edgeLength:[70,160],gravity:.08},lineStyle:{color:'source',curveness:.18,opacity:.36},emphasis:{focus:'adjacency'},data:state.graph.nodes,links:state.graph.links}]},true); }
+  function renderUniverse(){ if(!state.graph.nodes.length)return; const wrap=$('universe'); wrap.querySelector('canvas')?.remove(); if(state.three?.renderer){ try{state.three.renderer.dispose()}catch(e){} }
+    const width=wrap.clientWidth, height=wrap.clientHeight; const scene=new THREE.Scene(); const camera=new THREE.PerspectiveCamera(58,width/height,.1,5000); camera.position.set(0,0,820); const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true}); renderer.setSize(width,height); renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1)); wrap.prepend(renderer.domElement);
+    const group=new THREE.Group(); scene.add(group); const light=new THREE.PointLight(0xffffff,1.2); light.position.set(240,220,460); scene.add(light); scene.add(new THREE.AmbientLight(0x88aaff,.85));
+    const palette={论文:0x4da3ff,文档:0xa77cff,章节:0x49e5ff,关键词:0x42f39b,文献:0xffb84d}; const objects=[]; const positions={};
+    const nodes=state.graph.nodes.slice(0,60); nodes.forEach((n,i)=>{ const radius= i===0?24:Math.max(7,Math.min(17,n.symbolSize/4)); const geo=new THREE.SphereGeometry(radius,24,24); const mat=new THREE.MeshStandardMaterial({color:palette[n.category]||0xffffff,emissive:palette[n.category]||0xffffff,emissiveIntensity:.18,roughness:.28,metalness:.18}); const mesh=new THREE.Mesh(geo,mat); const angle=i*2.399963; const r= i===0?0:90+Math.sqrt(i)*34; const z=(Math.random()-.5)*260; mesh.position.set(Math.cos(angle)*r,Math.sin(angle)*r,z); mesh.userData=n; group.add(mesh); objects.push(mesh); positions[n.id]=mesh.position; });
+    state.graph.links.forEach(l=>{ if(!positions[l.source]||!positions[l.target])return; const pts=[positions[l.source],positions[l.target]]; const geo=new THREE.BufferGeometry().setFromPoints(pts); const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0x8fbaff,transparent:true,opacity:.16})); group.add(line); });
+    const starsGeo=new THREE.BufferGeometry(); const starPos=[]; for(let i=0;i<700;i++) starPos.push((Math.random()-.5)*1800,(Math.random()-.5)*1200,(Math.random()-.5)*1600); starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPos,3)); scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xffffff,size:1.25,transparent:true,opacity:.42})));
+    let dragging=false,lastX=0,lastY=0,scale=1; renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY}); window.addEventListener('pointerup',()=>dragging=false); renderer.domElement.addEventListener('pointermove',e=>{ if(!dragging)return; group.rotation.y+=(e.clientX-lastX)*.006; group.rotation.x+=(e.clientY-lastY)*.006; lastX=e.clientX;lastY=e.clientY; }); renderer.domElement.addEventListener('wheel',e=>{e.preventDefault(); scale+=e.deltaY>0?-0.06:.06; scale=Math.max(.55,Math.min(1.8,scale)); group.scale.setScalar(scale);},{passive:false});
+    const raycaster=new THREE.Raycaster(); const mouse=new THREE.Vector2(); renderer.domElement.addEventListener('click',e=>{ const rect=renderer.domElement.getBoundingClientRect(); mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1; raycaster.setFromCamera(mouse,camera); const hit=raycaster.intersectObjects(objects)[0]; if(hit){ const d=hit.object.userData; $('universeInfo').innerHTML=`<b>${escapeHtml(d.name)}</b><br>类型：${escapeHtml(d.category)} · 节点值：${Math.round(d.value||0)}`; } });
+    function animate(){ group.rotation.z+=.0015; renderer.render(scene,camera); state.three.raf=requestAnimationFrame(animate); } state.three={scene,camera,renderer,group,raf:0}; animate(); }
+
+  function switchTab(tab){ document.querySelectorAll('#desktopNav button,#mobileNav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active')); $(`${tab}Panel`).classList.add('active'); setTimeout(()=>{state.echarts?.resize(); if(tab==='universe')renderUniverse(); window.scrollTo({top:0,behavior:'smooth'});},90); }
+  function selectSection(i){ state.selected=i; renderSections(); switchTab('editor'); setTimeout(()=>{ const target=$('paperEditor').querySelector(`[data-section="${i}"]`); if(target)target.scrollIntoView({behavior:'smooth',block:'center'}); },80); }
+  function highlightTerm(term){ term=(term||'').trim(); if(!term)return toast('请输入关键词'); renderEditor(); const walker=document.createTreeWalker($('paperEditor'),NodeFilter.SHOW_TEXT); const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode); const esc=term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); let count=0; nodes.forEach(node=>{ const reg=new RegExp(esc,'gi'); if(reg.test(node.nodeValue)){ count++; const span=document.createElement('span'); span.innerHTML=escapeHtml(node.nodeValue).replace(new RegExp(esc,'gi'),m=>`<mark>${escapeHtml(m)}</mark>`); node.parentNode.replaceChild(span,node); }}); const first=$('paperEditor').querySelector('mark'); if(first)first.scrollIntoView({behavior:'smooth',block:'center'}); toast(count?`已高亮：${term}`:`未找到：${term}`); }
+  function askCopilot(){ const q=$('qaInput').value.trim(); if(!q)return toast('请输入问题'); if(!state.rawText)return toast('请先上传论文'); let special=''; if(/答辩|陈述|defense/i.test(q)) special=`<div class="list-item"><b>答辩陈述</b><br>${state.defense.speech.map((x,i)=>`${i+1}. ${escapeHtml(x)}`).join('<br>')}</div>`; if(/综述|review|主题/i.test(q)) special+=`<div class="list-item"><b>综述主题</b><br>${escapeHtml(state.review.theme)}<br>${state.review.outline.map((x,i)=>`${i+1}. ${escapeHtml(x)}`).join('<br>')}</div>`; const hits=ragSearch(q,6); $('qaAnswer').innerHTML=(special||'')+(hits.length?hits.map((h,i)=>`<div class="list-item"><b>依据 ${i+1}｜${escapeHtml(h.doc)}｜${h.id}</b><br>${escapeHtml(h.text.slice(0,460))}${h.text.length>460?'……':''}</div>`).join(''):'<div class="list-item">没有匹配到明显段落。可以换一个关键词，例如“研究方法 / 创新点 / 结论”。</div>'); }
+  function makeNote(){ return `# ${state.title}｜Paper Reader OS X 研究笔记\n\n## 论文七问\n1. 研究对象：${state.seven.what||''}\n2. 研究价值：${state.seven.why||''}\n3. 研究方法：${state.seven.how||''}\n4. 数据材料：${state.seven.data||''}\n5. 核心结论：${state.seven.result||''}\n6. 创新价值：${state.seven.new||''}\n7. 局限展望：${state.seven.limit||''}\n\n## 关键词\n${state.keywords.join('、')}\n\n## 多论文综述\n主题：${state.review.theme||''}\n${(state.review.outline||[]).map((x,i)=>`${i+1}. ${x}`).join('\n')}\n\n## 研究缺口\n${(state.review.gap||[]).map((x,i)=>`${i+1}. ${x}`).join('\n')}\n\n## 答辩陈述\n${(state.defense.speech||[]).map((x,i)=>`${i+1}. ${x}`).join('\n')}\n\n## 我的笔记\n${state.notes.map((x,i)=>`${i+1}. ${x}`).join('\n')||'暂无'}\n`; }
+  function downloadText(name,text,type='text/plain;charset=utf-8'){ const blob=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+  async function copyNote(){ await navigator.clipboard.writeText(makeNote()); toast('已复制研究笔记'); }
+  function exportJson(){ downloadText(`${state.title.slice(0,24)||'paper'}-osx-analysis.json`,JSON.stringify({docs:state.docs.map(d=>({name:d.name,ext:d.ext,words:d.words,status:d.status})),title:state.title,sections:state.sections,keywords:state.keywords,refs:state.refs,dois:state.dois,scores:state.scores,seven:state.seven,review:state.review,defense:state.defense,graph:state.graph,notes:state.notes},null,2),'application/json;charset=utf-8'); }
+  function reAnalyzeFromEditor(){ const title=$('paperEditor').querySelector('h1')?.innerText||state.title; const content=[...$('paperEditor').querySelectorAll('section')].map(sec=>`${sec.querySelector('h2')?.innerText||'未命名'}\n${[...sec.querySelectorAll('p')].map(p=>p.innerText).join('\n')}`).join('\n\n'); state.docs=[{name:'编辑区文档.md',ext:'md',size:content.length,text:`${title}\n\n${content}`,words:countWords(content),status:'ok'}]; analyzeAll(); }
+  function saveLocal(){ saveMeta(); }
+  async function loadLocal(){
+    const meta=getMeta(); state.notes=meta.notes||[]; state.activeIds=meta.activeIds||[];
+    try{
+      let docs=await dbGetDocs();
+      if(!docs.length){
+        const old=JSON.parse(localStorage.getItem('paperReaderOSX')||'{}');
+        if(old.docs?.length){
+          docs=old.docs.map(d=>({...d,id:d.id||makeDocId(d.name||'paper'),addedAt:d.addedAt||Date.now()}));
+          for(const d of docs) await dbPutDoc(d);
+        }
+      }
+      state.library=docs.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+      const ids=new Set(state.library.map(d=>d.id));
+      state.activeIds=state.activeIds.filter(id=>ids.has(id));
+      if(!state.activeIds.length) state.activeIds=state.library.map(d=>d.id);
+      syncActiveDocs(); renderLibrary(); renderNotes();
+      if(state.docs.length){ preRender(state.docs.map(d=>({name:d.name,size:d.size||0}))); state.docs.forEach(d=>updateFileStatus(d.name,'已选','ok')); analyzeAll(); }
+    }catch(e){ console.warn(e); renderLibrary(); renderNotes(); toast('论文库读取失败，可继续上传新文档。'); }
+  }
+  async function clearAll(){
+    try{ await dbClearDocs(); }catch(e){}
+    localStorage.removeItem(META_KEY); localStorage.removeItem('paperReaderOSX'); location.reload();
+  }
+  function loadSample(){ const sample1=`基于用户体验下的虚拟空间交互设计——以江汉大学校史馆为例\n\n摘要\n随着数字媒体技术、虚拟现实技术和交互设计方法的发展，高校校史馆的展示方式正在从静态陈列转向沉浸式、交互式与数据化表达。本文以江汉大学校史馆为研究对象，围绕用户体验、信息架构、空间叙事和交互流程展开研究，尝试构建一个可浏览、可搜索、可互动的虚拟校史馆原型。研究通过文献分析、竞品案例研究、问卷调查和用户访谈总结用户需求，并以此提出虚拟校史馆的信息架构与交互设计策略。结果表明，清晰的时间轴导航、热点弹窗、搜索检索和场景化叙事能够提升用户的信息查找效率和沉浸体验。\n\n关键词\n用户体验、虚拟空间、交互设计、校史馆、信息可视化\n\n第一章 绪论\n高校校史馆承担着传播学校历史、凝聚校园文化、展示办学成果的重要功能。传统校史馆在空间距离、参观时间、信息层级和互动体验方面存在限制，难以满足新一代用户对数字化、沉浸式和个性化体验的需求。本文主要解决传统校史馆信息获取效率低、参观路径单一和文化记忆点不足的问题。\n\n第二章 理论基础与文献综述\n用户体验理论强调可用性、情感体验、任务效率与持续参与。虚拟空间设计则关注空间结构、视觉引导、交互反馈和叙事路径。国内外关于数字博物馆、虚拟展厅和校园文化展示的研究，为本文提供了理论依据。\n\n第三章 研究方法与用户需求分析\n本文采用文献研究、案例分析、问卷调查和半结构化访谈方法。问卷围绕参观动机、信息查找方式、互动偏好和视觉风格展开。访谈对象包括在校学生、校友和教师。调研显示，用户更关注清晰的时间轴导航、人物与事件检索、重要成果可视化、沉浸式漫游以及轻量化互动问答。\n\n第四章 信息架构与交互流程设计\n系统首页包括校史时间轴、历史事件、代表人物、荣誉成果、VR漫游入口、互动问答和搜索模块。交互流程分为首次访问流程、时间轴浏览流程、关键词搜索流程和互动体验流程。图1 信息架构图展示了系统模块关系。表1 用户需求分类表总结了核心需求。\n\n第五章 虚拟空间视觉与原型实践\n原型采用现代化深色界面、蓝色科技感视觉语言和模块化信息卡片。虚拟空间中设置入口大厅、历史长廊、人物展区、荣誉展区和未来展望区。用户可通过点击热点、触发弹窗、播放视频和切换视角完成交互体验。\n\n第六章 可用性测试与结果分析\n测试结果显示，优化后的虚拟校史馆在信息查找效率、导航清晰度、沉浸感和整体满意度方面均有提升。用户普遍认为时间轴和搜索功能能够有效帮助理解学校发展脉络，但部分用户希望增加语音导览和个性化推荐功能。\n\n结论\n本文从用户体验视角出发，构建了高校校史馆虚拟空间交互设计方案。研究表明，清晰的信息架构、场景化叙事和及时交互反馈能够提升数字校史馆的可用性和文化传播效果。本文的创新点在于将用户体验研究、虚拟空间叙事和信息可视化结合，用于高校校史馆数字化展示。研究不足在于样本数量有限，后续可进一步结合 AI 问答、知识图谱和多端适配，提升系统智能化水平。\n\n参考文献\n[1] Norman D. The Design of Everyday Things.\n[2] Garrett J. The Elements of User Experience.\n[3] 王某某. 数字博物馆交互设计研究.\n[4] 李某某. 虚拟现实技术在高校文化展示中的应用.`;
+    const sample2=`数字博物馆知识图谱与智能导览研究\n\n摘要\n本文关注数字博物馆中的知识组织、智能问答和个性化导览问题，提出一种结合知识图谱、语义检索和用户画像的智能导览框架。研究发现，知识图谱能够提升文物关系表达和跨展区联想能力，但仍存在数据标准不统一、实时交互不足和多模态内容生成质量不稳定等问题。\n\n关键词\n数字博物馆、知识图谱、智能导览、语义检索、用户画像\n\n研究方法\n本文采用案例分析、系统原型设计和用户任务测试方法，对多个数字博物馆平台进行对比，并构建包含展品、人物、历史事件和空间节点的知识网络。\n\n结论\n知识图谱能够帮助用户从单点浏览转向关系化理解，适合与虚拟展厅、AR导航和AI问答结合。未来应加强数据治理、多模态交互和长期用户体验评估。\n\n参考文献\n[1] Chen A. Knowledge Graph for Digital Museum. doi:10.1234/dmkg.2024.001\n[2] Li B. Intelligent Guide System in Cultural Heritage. doi:10.5678/heritage.2023.009`;
+    state.docs=[{id:makeDocId('校史馆虚拟空间论文.txt'),name:'校史馆虚拟空间论文.txt',ext:'txt',size:sample1.length,text:sample1,words:countWords(sample1),status:'ok',addedAt:Date.now(),source:'sample'},{id:makeDocId('数字博物馆知识图谱论文.txt'),name:'数字博物馆知识图谱论文.txt',ext:'txt',size:sample2.length,text:sample2,words:countWords(sample2),status:'ok',addedAt:Date.now()+1,source:'sample'}]; state.library=[...state.docs,...state.library]; state.activeIds=state.docs.map(d=>d.id); state.docs.forEach(d=>dbPutDoc(d).catch(()=>{})); renderLibrary(); saveMeta(); preRender(state.docs.map(d=>({name:d.name,size:d.size}))); state.docs.forEach(d=>updateFileStatus(d.name,'示例','ok')); analyzeAll(); }
+
+  function initBg(){ const canvas=$('neuralBg'),ctx=canvas.getContext('2d'); let particles=[]; function resize(){canvas.width=innerWidth*devicePixelRatio;canvas.height=innerHeight*devicePixelRatio;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);particles=Array.from({length:Math.min(120,Math.floor(innerWidth/10))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*2+1}));} resize(); addEventListener('resize',resize); function tick(){ctx.clearRect(0,0,innerWidth,innerHeight); ctx.fillStyle='rgba(77,163,255,.52)'; particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>innerWidth)p.vx*=-1;if(p.y<0||p.y>innerHeight)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}); for(let i=0;i<particles.length;i++){ for(let j=i+1;j<particles.length;j++){ const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy); if(d<120){ctx.strokeStyle=`rgba(77,163,255,${(1-d/120)*.18})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();} } } requestAnimationFrame(tick);} tick(); }
+
+  $('fileInput').addEventListener('change',e=>handleFiles(e.target.files)); ['dragenter','dragover'].forEach(evt=>$('dropzone').addEventListener(evt,e=>{e.preventDefault();$('dropzone').classList.add('dragover')})); ['dragleave','drop'].forEach(evt=>$('dropzone').addEventListener(evt,e=>{e.preventDefault();$('dropzone').classList.remove('dragover')})); $('dropzone').addEventListener('drop',e=>handleFiles(e.dataTransfer.files)); document.querySelectorAll('#desktopNav button,#mobileNav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab)); $('loadSampleBtn').onclick=loadSample; $('clearBtn').onclick=clearAll; $('analyzeLibraryBtn').onclick=analyzeSelectedLibrary; $('selectAllLibraryBtn').onclick=toggleSelectLibrary; $('clearLibraryBtn').onclick=clearAll; $('exportMdBtn').onclick=()=>downloadText(`${state.title.slice(0,24)||'paper'}-research-note.md`,makeNote(),'text/markdown;charset=utf-8'); $('exportJsonBtn').onclick=exportJson; $('copyNoteBtn').onclick=copyNote; $('reanalyzeBtn').onclick=reAnalyzeFromEditor; $('qaBtn').onclick=askCopilot; $('qaInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();askCopilot();}}); document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{$('qaInput').value=b.dataset.q;askCopilot();}); document.querySelectorAll('[data-agent]').forEach(b=>b.onclick=()=>{ const a=b.dataset.agent; if(a==='review')switchTab('review'); if(a==='seven')switchTab('reader'); if(a==='defense'){switchTab('review'); setTimeout(()=>$('qaInput').value='帮我生成答辩陈述',50);} if(a==='improve'){switchTab('reader');} }); $('searchInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){switchTab('editor');highlightTerm(e.target.value);} }); $('addNoteBtn').onclick=()=>{ const v=$('noteInput').value.trim(); if(!v)return toast('请输入笔记'); state.notes.unshift(v); $('noteInput').value=''; renderNotes(); saveLocal(); }; $('bookmarkBtn').onclick=()=>{ if(state.selected<0)return toast('先点击一个章节'); const s=state.sections[state.selected]; state.notes.unshift(`书签：${s.title}（${s.words}字）`); renderNotes(); saveLocal(); toast('已写入笔记书签'); }; $('themeBtn').onclick=()=>{document.body.classList.toggle('light'); setTimeout(()=>{renderKnowledgeGraph();renderUniverse();},80)}; $('resetGraphBtn').onclick=()=>{buildGraph();renderKnowledgeGraph();renderUniverse();}; window.addEventListener('resize',()=>{state.echarts?.resize(); if(document.querySelector('#universePanel.active'))renderUniverse();});
+  initBg(); loadLocal();
+</script>
+</body>
+</html>
