@@ -2,275 +2,621 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>论文快速阅读与可视化系统 Paper Reader Visual Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#F2F2F7"/>
+  <title>Paper Reader Lab Pro｜论文阅读与可视化系统</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
-    :root {
-      /* iOS Light Mode Colors */
-      --bg: #F2F2F7;
-      --card-bg: #FFFFFF;
-      --glass-bg: rgba(255, 255, 255, 0.75);
-      --border: rgba(0, 0, 0, 0.08);
-      --text-main: #1C1C1E;
-      --text-muted: #8E8E93;
-      --text-secondary: #3A3A3C;
-      --sys-blue: #007AFF;
-      --sys-green: #34C759;
-      --sys-purple: #AF52DE;
-      --sys-red: #FF3B30;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
-      --radius-sm: 12px;
-      --radius-md: 18px;
-      --radius-lg: 24px;
+    :root{
+      --bg:#F2F2F7;
+      --card:#FFFFFF;
+      --glass:rgba(255,255,255,.78);
+      --glass-strong:rgba(255,255,255,.94);
+      --border:rgba(0,0,0,.08);
+      --text:#1C1C1E;
+      --sub:#3A3A3C;
+      --muted:#8E8E93;
+      --blue:#007AFF;
+      --green:#34C759;
+      --purple:#AF52DE;
+      --orange:#FF9500;
+      --red:#FF3B30;
+      --yellow:#FFCC00;
+      --shadow:0 18px 50px rgba(0,0,0,.10);
+      --shadow-sm:0 2px 10px rgba(0,0,0,.05);
+      --r12:12px;
+      --r18:18px;
+      --r24:24px;
+      --r32:32px;
+      --topbar-h:64px;
+      --bottom-h:76px;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        /* iOS Dark Mode Colors */
-        --bg: #000000;
-        --card-bg: #1C1C1E;
-        --glass-bg: rgba(28, 28, 30, 0.75);
-        --border: rgba(255, 255, 255, 0.12);
-        --text-main: #F2F2F7;
-        --text-muted: #98989D;
-        --text-secondary: #EBEBF5;
-        --sys-blue: #0A84FF;
-        --sys-green: #32D74B;
-        --sys-purple: #BF5AF2;
-        --sys-red: #FF453A;
-        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-        --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.3);
+    body.dark{
+      --bg:#000000;
+      --card:#1C1C1E;
+      --glass:rgba(28,28,30,.76);
+      --glass-strong:rgba(28,28,30,.94);
+      --border:rgba(255,255,255,.12);
+      --text:#F2F2F7;
+      --sub:#EBEBF5;
+      --muted:#98989D;
+      --blue:#0A84FF;
+      --green:#32D74B;
+      --purple:#BF5AF2;
+      --orange:#FF9F0A;
+      --red:#FF453A;
+      --yellow:#FFD60A;
+      --shadow:0 18px 50px rgba(0,0,0,.38);
+      --shadow-sm:0 2px 12px rgba(0,0,0,.26);
+    }
+
+    @media (prefers-color-scheme: dark){
+      body:not(.light){
+        --bg:#000000;
+        --card:#1C1C1E;
+        --glass:rgba(28,28,30,.76);
+        --glass-strong:rgba(28,28,30,.94);
+        --border:rgba(255,255,255,.12);
+        --text:#F2F2F7;
+        --sub:#EBEBF5;
+        --muted:#98989D;
+        --blue:#0A84FF;
+        --green:#32D74B;
+        --purple:#BF5AF2;
+        --orange:#FF9F0A;
+        --red:#FF453A;
+        --yellow:#FFD60A;
+        --shadow:0 18px 50px rgba(0,0,0,.38);
+        --shadow-sm:0 2px 12px rgba(0,0,0,.26);
       }
     }
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-      background-color: var(--bg);
-      overflow-x: hidden;
-      line-height: 1.5;
+    *{box-sizing:border-box;-webkit-font-smoothing:antialiased}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100dvh;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+      background:
+        radial-gradient(circle at 16% -8%, rgba(0,122,255,.17), transparent 34%),
+        radial-gradient(circle at 92% 5%, rgba(175,82,222,.15), transparent 30%),
+        radial-gradient(circle at 50% 108%, rgba(52,199,89,.08), transparent 30%),
+        var(--bg);
+      overflow-x:hidden;
+      line-height:1.5;
+      padding-bottom:env(safe-area-inset-bottom);
     }
 
-    .app { width: min(1200px, calc(100% - 32px)); margin: auto; padding: 24px 0 60px; }
-
-    /* Glassmorphism utility */
-    .glass {
-      background: var(--glass-bg);
-      backdrop-filter: saturate(180%) blur(24px);
-      -webkit-backdrop-filter: saturate(180%) blur(24px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+    .app{
+      width:min(1480px,calc(100% - 32px));
+      margin:auto;
+      padding:24px 0 calc(72px + env(safe-area-inset-bottom));
     }
 
-    /* Topbar */
-    .topbar {
-      position: sticky; top: 16px; z-index: 20;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      padding: 12px 20px;
-      border-radius: 999px;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 32px;
-    }
-    
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; }
-    .logo {
-      width: 36px; height: 36px; border-radius: 10px;
-      display: grid; place-items: center;
-      color: #fff; font-weight: 800;
-      background: var(--sys-blue);
+    .glass{
+      background:var(--glass);
+      backdrop-filter:saturate(180%) blur(26px);
+      -webkit-backdrop-filter:saturate(180%) blur(26px);
+      border:1px solid var(--border);
+      border-radius:var(--r24);
+      box-shadow:var(--shadow-sm);
     }
 
-    /* iOS Segmented Control */
-    .nav {
-      display: flex; align-items: center;
-      background: rgba(118, 118, 128, 0.12);
-      padding: 3px; border-radius: 9px;
-    }
-    .nav button {
-      border: none; background: transparent; color: var(--text-main);
-      padding: 6px 16px; border-radius: 7px;
-      font-size: 14px; font-weight: 500; cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .nav button.active {
-      background: var(--card-bg);
-      box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04);
+    .topbar{
+      position:sticky;
+      top:max(12px, env(safe-area-inset-top));
+      z-index:50;
+      min-height:var(--topbar-h);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:12px 18px;
+      border-radius:999px;
+      box-shadow:var(--shadow);
+      margin-bottom:24px;
     }
 
-    /* Standard Buttons */
-    button, .btn {
-      font-family: inherit; font-size: 15px; font-weight: 600;
-      border: 1px solid var(--border);
-      background: var(--card-bg); color: var(--text-main);
-      padding: 10px 18px; border-radius: 999px;
-      cursor: pointer; transition: 0.2s; user-select: none;
-      display: inline-flex; align-items: center; justify-content: center;
+    .brand{display:flex;align-items:center;gap:12px;font-weight:760;font-size:17px;white-space:nowrap}
+    /* 保持原来的 R logo 不变 */
+    .logo{
+      width:36px;height:36px;border-radius:10px;
+      display:grid;place-items:center;
+      color:#fff;font-weight:800;
+      background:var(--blue);
+      flex:0 0 auto;
     }
-    button:hover, .btn:hover { opacity: 0.8; }
-    button:active, .btn:active { transform: scale(0.96); }
-    .btn.primary { background: var(--sys-blue); color: #fff; border: none; }
-    .btn.danger { color: var(--sys-red); background: rgba(255,59,48,0.1); border: none; }
+    .brand-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-    /* Inputs */
-    input, textarea, select {
-      font-family: inherit; font-size: 15px;
-      border: 1px solid var(--border);
-      background: var(--card-bg); color: var(--text-main);
-      border-radius: var(--radius-sm);
-      padding: 12px 16px; outline: none; transition: 0.2s;
-      width: 100%;
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:2px;
+      background:rgba(118,118,128,.12);
+      padding:3px;
+      border-radius:12px;
+      overflow-x:auto;
+      max-width:760px;
+      scrollbar-width:none;
     }
-    input:focus, textarea:focus {
-      border-color: var(--sys-blue);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    .nav::-webkit-scrollbar{display:none}
+    .nav button{
+      border:0;background:transparent;color:var(--text);
+      padding:8px 13px;border-radius:10px;
+      font-size:14px;font-weight:700;cursor:pointer;
+      transition:.2s;white-space:nowrap;
+      min-height:34px;
     }
-    input[type=file] { display: none; }
-
-    /* Hero Section */
-    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-    .intro { padding: 40px; }
-    h1 { font-size: 40px; font-weight: 800; letter-spacing: -1px; margin: 0 0 16px; line-height: 1.1; }
-    .lead { color: var(--text-muted); font-size: 17px; line-height: 1.6; margin-bottom: 32px; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-
-    /* Dropzone */
-    .upload-panel { padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
-    .dropzone {
-      border: 2px dashed var(--sys-blue);
-      border-radius: var(--radius-md);
-      background: rgba(0, 122, 255, 0.05);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; cursor: pointer; padding: 40px 20px;
-      transition: all 0.2s ease; flex: 1;
-    }
-    .dropzone strong { font-size: 18px; margin-bottom: 8px; color: var(--sys-blue); }
-    .dropzone span { color: var(--text-muted); font-size: 14px; }
-    .dropzone:hover, .dropzone.dragover { background: rgba(0, 122, 255, 0.1); transform: scale(1.02); }
-
-    /* Stats */
-    .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
-    .stat {
-      padding: 20px; border-radius: var(--radius-md);
-      background: var(--card-bg); border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm); display: flex; flex-direction: column;
-    }
-    .stat span { font-size: 13px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat b { font-size: 28px; font-weight: 700; margin: 8px 0 4px; letter-spacing: -0.5px; }
-    .stat small { font-size: 12px; color: var(--text-muted); }
-
-    /* Layout */
-    .layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
-    .sidebar { position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto; padding: 20px; }
-    .panel { padding: 32px; }
-    .panel-title h2, .side-title h2 { font-size: 20px; font-weight: 700; margin: 0 0 20px 0; }
-    
-    .hidden { display: none !important; }
-
-    /* Sidebar Items */
-    .section-list { display: flex; flex-direction: column; gap: 12px; }
-    .sec-card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); padding: 14px;
-      cursor: pointer; transition: 0.2s;
-    }
-    .sec-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-    .sec-card.active { border-color: var(--sys-blue); background: rgba(0, 122, 255, 0.05); }
-    .sec-card .name { display: flex; justify-content: space-between; font-weight: 600; font-size: 15px; }
-    .sec-card .name em { font-style: normal; color: var(--sys-blue); font-size: 12px; }
-    .sec-card .meta { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
-
-    /* Reader Grid */
-    .reader-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .reader-card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: var(--radius-md); padding: 24px;
-      box-shadow: var(--shadow-sm);
-    }
-    .reader-card.wide { grid-column: 1 / -1; }
-    .reader-card h3 { margin: 0 0 12px 0; font-size: 18px; font-weight: 700; }
-    .reader-card p, .reader-card ul { color: var(--text-secondary); line-height: 1.6; font-size: 15px; margin: 0; }
-    .reader-card ul { padding-left: 20px; }
-    
-    .badge {
-      display: inline-block; padding: 4px 10px; border-radius: 6px;
-      background: rgba(0, 122, 255, 0.1); color: var(--sys-blue);
-      font-size: 12px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase;
+    .nav button.active{
+      background:var(--card);
+      box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04);
     }
 
-    /* Charts & Mindmap */
-    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .chart, .mindmap {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: var(--radius-md); padding: 20px; min-height: 350px;
+    button,.btn{
+      font-family:inherit;font-size:15px;font-weight:700;
+      border:1px solid var(--border);
+      background:var(--card);color:var(--text);
+      padding:10px 16px;border-radius:999px;
+      cursor:pointer;transition:.2s;user-select:none;
+      display:inline-flex;align-items:center;justify-content:center;gap:7px;
+      text-decoration:none;
+      min-height:42px;
     }
-    .wide { grid-column: 1 / -1; }
+    button:hover,.btn:hover{opacity:.88;transform:translateY(-1px)}
+    button:active,.btn:active{transform:scale(.97)}
+    .btn.primary{background:var(--blue);color:#fff;border:0}
+    .btn.green{background:var(--green);color:#fff;border:0}
+    .btn.orange{background:var(--orange);color:#fff;border:0}
+    .btn.danger{color:var(--red);background:rgba(255,59,48,.11);border:0}
+    .btn.ghost{background:transparent}
+    .btn.small{min-height:34px;padding:7px 11px;font-size:13px}
 
-    /* Editor */
-    .editor-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
-    .paper-editor {
-      min-height: 600px; background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: var(--radius-md); padding: 40px; outline: none;
-      line-height: 1.8; font-size: 16px;
+    input,textarea,select{
+      font-family:inherit;font-size:15px;
+      border:1px solid var(--border);
+      background:var(--card);color:var(--text);
+      border-radius:var(--r12);
+      padding:12px 14px;outline:0;transition:.2s;
+      width:100%;
+      min-height:44px;
     }
-    .paper-editor h1 { font-size: 28px; }
-    .paper-editor h2 { font-size: 20px; margin-top: 32px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-    mark { background: rgba(255, 204, 0, 0.4); color: inherit; border-radius: 4px; padding: 0 4px; }
+    textarea{resize:vertical}
+    input:focus,textarea:focus,select:focus{
+      border-color:var(--blue);
+      box-shadow:0 0 0 4px rgba(0,122,255,.16);
+    }
+    input[type=file]{display:none}
 
-    .edit-box { display: flex; flex-direction: column; gap: 16px; }
-    .edit-box textarea { min-height: 300px; resize: vertical; }
+    .pill,.chip{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 10px;border-radius:999px;
+      background:rgba(118,118,128,.12);
+      color:var(--muted);
+      font-size:12px;font-weight:700;
+      border:1px solid var(--border);
+      white-space:nowrap;
+    }
+    .chip.blue{color:var(--blue);background:rgba(0,122,255,.10);border-color:rgba(0,122,255,.12)}
+    .chip.green{color:var(--green);background:rgba(52,199,89,.12);border-color:rgba(52,199,89,.13)}
+    .chip.orange{color:var(--orange);background:rgba(255,149,0,.12);border-color:rgba(255,149,0,.13)}
+    .chip.purple{color:var(--purple);background:rgba(175,82,222,.12);border-color:rgba(175,82,222,.13)}
 
-    /* Empty State */
-    .empty {
-      padding: 60px 20px; text-align: center; color: var(--text-muted);
-      border: 2px dashed var(--border); border-radius: var(--radius-md);
+    .hero{
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:22px;
+      margin-bottom:20px;
+    }
+    .intro{
+      padding:clamp(24px,4vw,46px);
+      min-height:340px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .eyebrow{
+      display:inline-flex;align-self:flex-start;align-items:center;gap:8px;
+      padding:7px 11px;border-radius:999px;
+      color:var(--blue);background:rgba(0,122,255,.10);
+      font-size:13px;font-weight:800;margin-bottom:16px;
+    }
+    h1{
+      font-size:clamp(34px,5vw,66px);
+      font-weight:880;
+      letter-spacing:-2px;
+      margin:0 0 16px;
+      line-height:1.02;
+    }
+    .lead{
+      color:var(--muted);
+      font-size:17px;
+      line-height:1.72;
+      margin:0 0 28px;
+      max-width:820px;
+    }
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+
+    .upload-panel{padding:24px;display:flex;flex-direction:column;gap:16px}
+    .dropzone{
+      border:2px dashed var(--blue);
+      border-radius:var(--r24);
+      background:rgba(0,122,255,.055);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;cursor:pointer;padding:34px 20px;
+      transition:.24s;flex:1;min-height:210px;
+    }
+    .dropzone strong{font-size:20px;margin-bottom:8px;color:var(--blue)}
+    .dropzone span{color:var(--muted);font-size:14px;line-height:1.75;max-width:540px}
+    .dropzone:hover,.dropzone.dragover{background:rgba(0,122,255,.12);transform:scale(1.01)}
+
+    .format-strip{display:flex;flex-wrap:wrap;gap:8px}
+    .grid-2{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:20px}
+    .panel{padding:clamp(18px,3vw,28px)}
+    .panel-title,.side-title{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:12px;margin-bottom:16px;
+    }
+    .panel-title h2,.side-title h2{font-size:20px;font-weight:780;margin:0}
+    .file-list{display:grid;gap:10px;max-height:240px;overflow:auto;padding-right:3px}
+    .file-item{
+      display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--r18);padding:12px 14px;
+    }
+    .file-item b{font-size:14px}
+    .file-item span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+    .status-pill{
+      font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px;
+      background:rgba(0,122,255,.10);color:var(--blue);white-space:nowrap;
+    }
+    .status-pill.ok{background:rgba(52,199,89,.12);color:var(--green)}
+    .status-pill.warn{background:rgba(255,149,0,.12);color:var(--orange)}
+    .progress{height:8px;background:rgba(118,118,128,.16);border-radius:999px;overflow:hidden;margin-top:12px}
+    .progress i{display:block;height:100%;width:0%;background:var(--blue);border-radius:999px;transition:width .2s}
+
+    .quick-tools{display:flex;flex-direction:column;gap:12px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:14px;
+      margin-bottom:22px;
+    }
+    .stat{
+      padding:18px;border-radius:var(--r18);
+      background:var(--card);border:1px solid var(--border);
+      box-shadow:var(--shadow-sm);min-height:112px;
+    }
+    .stat span{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.45px}
+    .stat b{display:block;font-size:28px;font-weight:780;margin:8px 0 3px;letter-spacing:-.5px}
+    .stat small{font-size:12px;color:var(--muted)}
+
+    .layout{
+      display:grid;
+      grid-template-columns:340px 1fr;
+      gap:22px;
+      align-items:start;
+    }
+    .sidebar{
+      position:sticky;
+      top:calc(var(--topbar-h) + 30px);
+      max-height:calc(100dvh - var(--topbar-h) - 46px);
+      overflow:auto;
+      padding:20px;
+    }
+    .section-list{display:flex;flex-direction:column;gap:10px}
+    .sec-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r18);
+      padding:13px 14px;
+      cursor:pointer;
+      transition:.2s;
+    }
+    .sec-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+    .sec-card.active{border-color:var(--blue);background:rgba(0,122,255,.07)}
+    .sec-card .name{display:flex;justify-content:space-between;gap:8px;font-size:15px;font-weight:750}
+    .sec-card .name em{font-style:normal;color:var(--blue);font-size:12px;white-space:nowrap}
+    .sec-card .meta{color:var(--muted);font-size:12px;margin-top:7px}
+    .mini-meter{height:6px;background:rgba(118,118,128,.15);border-radius:999px;overflow:hidden;margin-top:9px}
+    .mini-meter i{display:block;height:100%;width:0%;border-radius:999px;background:var(--blue)}
+
+    .tab-panel{min-height:420px}
+    .hidden{display:none!important}
+    .segmented{
+      display:inline-flex;background:rgba(118,118,128,.12);
+      padding:3px;border-radius:12px;gap:2px;overflow:auto;
+      scrollbar-width:none;
+    }
+    .segmented::-webkit-scrollbar{display:none}
+    .segmented button{border:0;background:transparent;border-radius:10px;padding:8px 12px;font-size:13px;white-space:nowrap;min-height:34px}
+    .segmented button.active{background:var(--card);box-shadow:0 3px 8px rgba(0,0,0,.10)}
+
+    .reader-grid,.extract-grid,.workspace-grid,.defense-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r24);
+      padding:22px;
+      box-shadow:var(--shadow-sm);
+    }
+    .card.wide{grid-column:1/-1}
+    .card.clickable{cursor:pointer}
+    .card.clickable:hover{transform:translateY(-2px);transition:.2s;border-color:var(--blue)}
+    .card h3{margin:0 0 12px;font-size:18px;font-weight:780}
+    .card p,.card li{color:var(--sub);line-height:1.72;font-size:15px}
+    .card p{margin:0}
+    .card ul{margin:0;padding-left:20px}
+    .badge{
+      display:inline-block;padding:4px 10px;border-radius:8px;
+      background:rgba(0,122,255,.10);color:var(--blue);
+      font-size:12px;font-weight:850;margin-bottom:12px;text-transform:uppercase;
+    }
+    .badge.green{background:rgba(52,199,89,.12);color:var(--green)}
+    .badge.orange{background:rgba(255,149,0,.12);color:var(--orange)}
+    .badge.purple{background:rgba(175,82,222,.12);color:var(--purple)}
+    .badge.red{background:rgba(255,59,48,.12);color:var(--red)}
+
+    .deep-score{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+    .score-card{
+      padding:14px;
+      border-radius:var(--r18);
+      background:rgba(118,118,128,.10);
+      border:1px solid var(--border);
+    }
+    .score-card b{display:block;font-size:24px;margin:4px 0}
+    .score-card span{color:var(--muted);font-size:12px;font-weight:800}
+    .ring{
+      width:76px;height:76px;border-radius:50%;
+      display:grid;place-items:center;
+      background:conic-gradient(var(--blue) 0deg, rgba(118,118,128,.18) 0deg);
+      color:var(--text);font-weight:850;
+      margin:auto;
+    }
+    .ring i{
+      display:grid;place-items:center;
+      width:58px;height:58px;border-radius:50%;
+      background:var(--card);font-style:normal;
     }
 
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 40px; left: 50%; transform: translate(-50%, 20px);
-      background: rgba(28, 28, 30, 0.9); color: #fff;
-      padding: 12px 24px; border-radius: 999px; font-weight: 500;
-      opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 100; box-shadow: var(--shadow-lg); backdrop-filter: blur(10px);
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .chart,.mindmap{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r24);
+      padding:18px;
+      min-height:350px;
+      box-shadow:var(--shadow-sm);
     }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .wide{grid-column:1/-1}
+    .mindmap{overflow:auto;display:flex;align-items:center;justify-content:center}
+    .map-wrap{min-width:760px;display:flex;align-items:center;gap:18px}
+    .map-center{
+      width:190px;min-height:118px;border-radius:28px;padding:18px;
+      display:grid;place-items:center;text-align:center;color:#fff;font-weight:860;
+      background:linear-gradient(135deg,var(--blue),var(--purple));
+    }
+    .map-cols{display:flex;flex-wrap:wrap;gap:12px;max-width:820px}
+    .map-node{
+      width:156px;min-height:82px;padding:12px;
+      border:1px solid var(--border);border-radius:var(--r18);background:var(--card);
+      display:flex;flex-direction:column;justify-content:center;
+    }
+    .map-node b{font-size:14px;margin-bottom:4px}
+    .map-node span{color:var(--muted);font-size:12px}
 
-    /* Pills & Tags */
-    .pill {
-      display: inline-flex; align-items: center;
-      padding: 4px 10px; border-radius: 6px;
-      background: var(--bg); color: var(--text-muted);
-      font-size: 13px; font-weight: 500; border: 1px solid var(--border);
+    .keyword-cloud{display:flex;flex-wrap:wrap;gap:8px}
+    .keyword{
+      border:1px solid var(--border);background:var(--card);
+      color:var(--text);padding:8px 12px;border-radius:999px;
+      font-size:14px;cursor:pointer;transition:.2s;min-height:36px;
     }
-    .keyword {
-      border: 1px solid var(--border); background: var(--card-bg);
-      color: var(--text-main); padding: 6px 12px; border-radius: 999px;
-      font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-block; margin: 4px;
+    .keyword:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .list{display:grid;gap:10px}
+    .list-item{
+      border:1px solid var(--border);
+      border-radius:var(--r18);
+      background:var(--glass);
+      padding:12px 14px;
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.65;
     }
-    .keyword:hover { background: var(--sys-blue); color: #fff; border-color: var(--sys-blue); }
+    .list-item b{color:var(--text)}
 
-    /* Responsiveness */
-    @media(max-width: 1024px) {
-      .hero, .layout, .reader-grid, .editor-layout { grid-template-columns: 1fr; }
-      .sidebar { position: relative; top: 0; max-height: none; }
-      .stats { grid-template-columns: repeat(3, 1fr); }
+    .editor-layout{display:grid;grid-template-columns:1fr 350px;gap:22px}
+    .paper-editor{
+      min-height:680px;max-height:820px;overflow:auto;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--r24);padding:38px;outline:0;
+      line-height:1.85;font-size:16px;box-shadow:var(--shadow-sm);
     }
-    @media(max-width: 600px) {
-      .stats { grid-template-columns: 1fr 1fr; }
-      .app { width: 100%; padding: 16px; }
-      .topbar { flex-direction: column; border-radius: var(--radius-md); padding: 16px; }
-      .nav { width: 100%; justify-content: space-between; }
+    .paper-editor h1{font-size:30px;letter-spacing:-.8px;margin:0 0 18px;line-height:1.25}
+    .paper-editor h2{font-size:21px;margin-top:34px;border-bottom:1px solid var(--border);padding-bottom:8px}
+    .paper-editor p{color:var(--sub)}
+    mark{background:rgba(255,204,0,.45);color:inherit;border-radius:5px;padding:0 4px}
+    .edit-box{display:flex;flex-direction:column;gap:13px;position:sticky;top:calc(var(--topbar-h) + 30px)}
+    .edit-box label{color:var(--muted);font-size:13px;font-weight:800}
+    .edit-box textarea{min-height:270px}
+
+    .mobile-bottom-nav{
+      position:fixed;
+      left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
+      z-index:80;
+      min-height:64px;
+      padding:7px;
+      border-radius:24px;
+      background:var(--glass-strong);
+      backdrop-filter:saturate(180%) blur(26px);
+      -webkit-backdrop-filter:saturate(180%) blur(26px);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      display:none;
+      grid-template-columns:repeat(6,1fr);
+      gap:4px;
+    }
+    .mobile-bottom-nav button{
+      padding:6px 4px;
+      min-height:50px;
+      border-radius:18px;
+      background:transparent;
+      border:0;
+      flex-direction:column;
+      gap:2px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .mobile-bottom-nav button strong{font-size:17px;line-height:1}
+    .mobile-bottom-nav button.active{background:rgba(0,122,255,.12);color:var(--blue)}
+
+    .floating-reader{
+      position:fixed;
+      right:18px;
+      bottom:calc(90px + env(safe-area-inset-bottom));
+      z-index:70;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .fab{
+      width:50px;height:50px;border-radius:50%;
+      padding:0;background:var(--blue);color:#fff;border:0;box-shadow:var(--shadow);
+      font-size:18px;
+    }
+
+    .empty{
+      padding:56px 20px;text-align:center;color:var(--muted);
+      border:2px dashed var(--border);border-radius:var(--r24);
+    }
+    .toast{
+      position:fixed;bottom:calc(40px + env(safe-area-inset-bottom));left:50%;
+      transform:translate(-50%,20px);
+      background:rgba(28,28,30,.93);color:#fff;
+      padding:12px 22px;border-radius:999px;font-weight:700;
+      opacity:0;pointer-events:none;transition:.28s cubic-bezier(.2,.8,.2,1);
+      z-index:120;box-shadow:var(--shadow);backdrop-filter:blur(14px);
+      max-width:min(760px,calc(100% - 28px));text-align:center;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    .reading-focus .hero,.reading-focus .grid-2,.reading-focus .stats,.reading-focus .sidebar{display:none}
+    .reading-focus .layout{grid-template-columns:1fr}
+    .reading-focus .app{width:min(920px,calc(100% - 32px))}
+    .reading-focus .topbar{opacity:.96}
+
+    @media(max-width:1180px){
+      .hero,.grid-2,.layout,.reader-grid,.workspace-grid,.defense-grid,.editor-layout{grid-template-columns:1fr}
+      .sidebar,.edit-box{position:relative;top:0;max-height:none}
+      .stats{grid-template-columns:repeat(3,1fr)}
+      .chart-grid,.extract-grid{grid-template-columns:1fr}
+      .topbar{border-radius:var(--r24);align-items:flex-start;flex-direction:column}
+      .nav{max-width:100%;width:100%}
+    }
+
+    @media(max-width:760px){
+      :root{--topbar-h:56px}
+      body{background:var(--bg)}
+      .app{
+        width:100%;
+        padding:12px 12px calc(var(--bottom-h) + 20px + env(safe-area-inset-bottom));
+      }
+      .topbar{
+        top:0;
+        margin:0 -2px 14px;
+        border-radius:0 0 24px 24px;
+        padding:calc(8px + env(safe-area-inset-top)) 14px 10px;
+        min-height:auto;
+        flex-direction:row;
+        align-items:center;
+      }
+      .brand{font-size:16px}
+      .brand-sub .chip{display:none}
+      .topbar .nav{display:none}
+      #themeBtn{min-height:36px;padding:7px 10px;font-size:13px}
+      .hero{grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+      .intro,.upload-panel,.panel{padding:18px;border-radius:24px}
+      .intro{min-height:unset}
+      .eyebrow{font-size:12px;margin-bottom:12px}
+      h1{font-size:36px;letter-spacing:-1.4px}
+      .lead{font-size:15px;line-height:1.65;margin-bottom:18px}
+      .hero-actions .btn{flex:1 1 100%;min-height:46px}
+      .dropzone{min-height:168px;padding:24px 14px;border-radius:22px}
+      .dropzone strong{font-size:18px}
+      .dropzone span{font-size:13px}
+      .format-strip{max-height:74px;overflow:auto}
+      .grid-2{grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+      .file-list{max-height:185px}
+      .stats{
+        display:flex;
+        overflow-x:auto;
+        gap:10px;
+        margin:0 -12px 14px;
+        padding:0 12px 4px;
+        scroll-snap-type:x proximity;
+        scrollbar-width:none;
+      }
+      .stats::-webkit-scrollbar{display:none}
+      .stat{
+        min-width:142px;
+        min-height:98px;
+        padding:14px;
+        scroll-snap-align:start;
+      }
+      .stat b{font-size:25px}
+      .layout{grid-template-columns:1fr;gap:12px}
+      .sidebar{display:none}
+      .panel-title{align-items:flex-start;flex-direction:column}
+      .segmented{width:100%;overflow-x:auto}
+      .segmented button{flex:1}
+      .reader-grid,.extract-grid,.workspace-grid,.defense-grid{grid-template-columns:1fr;gap:12px}
+      .card{padding:18px;border-radius:22px}
+      .card h3{font-size:17px}
+      .card p,.card li{font-size:14px}
+      .deep-score{grid-template-columns:1fr 1fr}
+      .chart,.mindmap{min-height:300px;padding:12px;border-radius:22px}
+      .map-wrap{min-width:620px}
+      .editor-layout{grid-template-columns:1fr}
+      .paper-editor{
+        min-height:60dvh;
+        max-height:none;
+        padding:20px;
+        font-size:15px;
+        border-radius:22px;
+      }
+      .paper-editor h1{font-size:24px}
+      .paper-editor h2{font-size:19px}
+      .edit-box{position:relative;top:0}
+      .mobile-bottom-nav{display:grid}
+      .floating-reader{right:12px;bottom:calc(86px + env(safe-area-inset-bottom))}
+      .fab{width:46px;height:46px}
+      .toast{bottom:calc(88px + env(safe-area-inset-bottom));border-radius:18px}
+    }
+
+    @media(max-width:390px){
+      .app{padding-left:10px;padding-right:10px}
+      h1{font-size:32px}
+      .stats{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+      .stat{min-width:132px}
+      .mobile-bottom-nav{left:8px;right:8px;grid-template-columns:repeat(3,1fr);min-height:104px}
+      .floating-reader{bottom:calc(126px + env(safe-area-inset-bottom))}
     }
   </style>
 </head>
@@ -280,142 +626,225 @@
   <header class="topbar glass">
     <div class="brand">
       <div class="logo">R</div>
-      <div>Paper Reader Lab</div>
+      <div class="brand-sub">
+        <span>Paper Reader Lab</span>
+        <span class="chip blue" id="deviceLabel">Responsive Pro</span>
+      </div>
     </div>
+
     <nav class="nav">
       <button class="active" data-tab="reader">快速阅读</button>
       <button data-tab="dashboard">可视化</button>
       <button data-tab="extract">信息提取</button>
-      <button data-tab="editor">在线编辑</button>
+      <button data-tab="deep">深度分析</button>
+      <button data-tab="defense">答辩提纲</button>
+      <button data-tab="workspace">工作台</button>
+      <button data-tab="editor">编辑</button>
     </nav>
-    <button class="btn primary" id="loadSampleBtn">载入体验示例</button>
+
+    <button class="btn ghost" id="themeBtn">外观</button>
   </header>
 
   <section class="hero">
     <div class="intro glass">
-      <h1>优雅地解析论文</h1>
-      <p class="lead">将复杂的学术文档转化为结构清晰的极简卡片。自动提取摘要、方法、核心创新点，并生成可视化结构导图。</p>
+      <span class="eyebrow">✦ Paper Reader OS Pro</span>
+      <h1>把论文变成可阅读、可提取、可答辩的知识系统</h1>
+      <p class="lead">深度开发版加入移动端自适应、底部导航、批量多格式读取、论文七问、质量评分、答辩提纲、文献矩阵、本地问答、阅读进度、笔记书签和 JSON / Markdown 导出。</p>
       <div class="hero-actions">
-        <label class="btn primary" for="fileInput">选择文档</label>
-        <button class="btn" id="exportNoteBtn">导出 Markdown</button>
+        <label class="btn primary" for="fileInput">上传文档</label>
+        <button class="btn" id="exportNoteBtn">导出速读笔记</button>
+        <button class="btn" id="exportMdBtn">导出全文 MD</button>
         <button class="btn danger" id="clearBtn">重置空间</button>
       </div>
     </div>
 
     <div class="upload-panel glass">
       <label class="dropzone" for="fileInput" id="dropzone">
-        <strong>拖拽文件至此</strong>
-        <span>支持 PDF / DOCX / TXT / MD</span>
+        <strong>拖拽多个文件至此</strong>
+        <span>支持 PDF / DOCX / PPTX / XLSX / CSV / TXT / MD / HTML / JSON / XML / RTF / EPUB / 图片 OCR。手机端可直接从文件或相册选择。</span>
       </label>
-      <input id="fileInput" type="file" accept=".pdf,.docx,.txt,.md,.markdown"/>
+      <input id="fileInput" type="file" multiple
+        accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.txt,.md,.markdown,.html,.htm,.json,.xml,.rtf,.epub,.jpg,.jpeg,.png,.webp,.bmp"/>
+      <div class="format-strip">
+        <span class="chip">PDF</span><span class="chip">DOCX</span><span class="chip">PPTX</span><span class="chip">XLSX/CSV</span>
+        <span class="chip">TXT/MD</span><span class="chip">HTML/JSON/XML</span><span class="chip">RTF</span><span class="chip">EPUB</span><span class="chip">Image OCR</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel glass">
+      <div class="panel-title">
+        <h2>文件读取中心</h2>
+        <span class="chip blue" id="fileCountLabel">0 个文件</span>
+      </div>
+      <div class="file-list" id="fileList">
+        <div class="empty" style="padding:32px 12px;border:none;">等待上传文档...</div>
+      </div>
+      <div class="progress"><i id="globalProgress"></i></div>
+    </div>
+
+    <div class="panel glass quick-tools">
+      <div class="panel-title">
+        <h2>快速工具</h2>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="loadSampleBtn">载入示例</button>
+        <button class="btn" id="focusBtn">专注阅读</button>
+        <button class="btn" id="copyNoteBtn">复制笔记</button>
+        <button class="btn" id="exportJsonBtn">导出 JSON</button>
+      </div>
+      <div class="toolbar">
+        <input id="globalSearch" placeholder="全局搜索并高亮，例如：研究方法"/>
+        <button class="btn small" id="globalSearchBtn">搜索</button>
+      </div>
+      <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.7;">移动端已自动适配：卡片单列、统计横滑、底部 Tab、触控按钮、图表重绘、安全区适配。</p>
     </div>
   </section>
 
   <section class="stats">
+    <div class="stat"><span>Files</span><b id="docCount">0</b><small>批量文档</small></div>
     <div class="stat"><span>Total Words</span><b id="wordCount">0</b><small>字数预估</small></div>
-    <div class="stat"><span>Read Time</span><b id="readTime">0m</b><small>预计阅读时间</small></div>
+    <div class="stat"><span>Read Time</span><b id="readTime">0m</b><small>按 450 字/分钟</small></div>
     <div class="stat"><span>Sections</span><b id="sectionCount">0</b><small>自动解析章节</small></div>
     <div class="stat"><span>Keywords</span><b id="keywordCount">0</b><small>核心关键词</small></div>
-    <div class="stat"><span>References</span><b id="refCount">0</b><small>引用的文献源</small></div>
-    <div class="stat"><span>Score</span><b id="scoreCount">0%</b><small>结构完整度</small></div>
+    <div class="stat"><span>Score</span><b id="scoreCount">0%</b><small>论文完整度</small></div>
   </section>
 
   <main class="layout">
     <aside class="sidebar glass">
       <div class="side-title">
         <h2>目录结构</h2>
+        <button class="btn small ghost" id="bookmarkBtn">书签</button>
       </div>
+      <input id="searchInput" placeholder="搜索关键词并高亮"/>
+      <div style="height:12px"></div>
       <div class="section-list" id="sectionList">
-        <div class="empty" style="padding: 30px 10px; border:none;">等待上传文档...</div>
+        <div class="empty" style="padding:30px 10px;border:none;">等待上传文档...</div>
       </div>
     </aside>
 
     <section class="content">
-      <!-- 快速阅读 -->
       <section class="panel glass tab-panel" id="readerPanel">
         <div class="panel-title">
           <h2>核心速读</h2>
+          <div class="segmented" id="summaryModes">
+            <button class="active" data-mode="one">1 分钟</button>
+            <button data-mode="five">5 分钟</button>
+            <button data-mode="deep">深度提纲</button>
+          </div>
         </div>
         <div id="readerEmpty" class="empty">暂无数据，请先上传文档或载入示例。</div>
         <div id="readerContent" class="hidden">
           <div class="reader-grid">
-            <div class="reader-card wide" id="mainSummaryCard"></div>
-            <div class="reader-card">
-              <span class="badge">Research Problem</span>
-              <h3>研究问题</h3>
-              <p id="problemText">—</p>
-            </div>
-            <div class="reader-card">
-              <span class="badge">Methodology</span>
-              <h3>研究方法</h3>
-              <p id="methodText">—</p>
-            </div>
-            <div class="reader-card">
-              <span class="badge">Key Results</span>
-              <h3>核心结论</h3>
-              <p id="resultText">—</p>
-            </div>
-            <div class="reader-card">
-              <span class="badge">Innovation</span>
-              <h3>创新价值</h3>
-              <p id="contributionText">—</p>
-            </div>
+            <div class="card wide" id="mainSummaryCard"></div>
+            <div class="card clickable" data-jump="problem"><span class="badge">Question</span><h3>研究问题</h3><p id="problemText">—</p></div>
+            <div class="card clickable" data-jump="method"><span class="badge purple">Method</span><h3>研究方法</h3><p id="methodText">—</p></div>
+            <div class="card clickable" data-jump="result"><span class="badge green">Result</span><h3>核心结论</h3><p id="resultText">—</p></div>
+            <div class="card clickable" data-jump="contribution"><span class="badge orange">Value</span><h3>创新价值</h3><p id="contributionText">—</p></div>
+            <div class="card wide"><span class="badge">Key Sentences</span><h3>关键句提取</h3><ul id="keySentenceList"></ul></div>
           </div>
         </div>
       </section>
 
-      <!-- 可视化 -->
       <section class="panel glass tab-panel hidden" id="dashboardPanel">
-        <div class="panel-title">
-          <h2>数据分析与可视化</h2>
-        </div>
+        <div class="panel-title"><h2>数据分析与可视化</h2><span class="chip">篇幅 / 模块 / 逻辑 / 知识地图</span></div>
         <div id="dashboardEmpty" class="empty">暂无数据。</div>
         <div id="dashboardContent" class="hidden">
           <div class="chart-grid">
             <div class="chart" id="sectionChart"></div>
             <div class="chart" id="typeChart"></div>
             <div class="chart wide" id="flowChart"></div>
+            <div class="mindmap wide" id="mindmap"></div>
           </div>
         </div>
       </section>
 
-      <!-- 信息提取 -->
       <section class="panel glass tab-panel hidden" id="extractPanel">
-        <div class="panel-title">
-          <h2>关键元数据提取</h2>
-        </div>
+        <div class="panel-title"><h2>信息提取</h2><span class="chip">摘要 / 关键词 / 图表 / 文献 / 术语</span></div>
         <div id="extractEmpty" class="empty">暂无数据。</div>
-        <div id="extractContent" class="hidden" style="display: flex; flex-direction: column; gap: 24px;">
-           <div class="reader-card wide">
-            <h3>关键词热区</h3>
-            <div id="keywordCloud" style="margin-top:12px;"></div>
+        <div id="extractContent" class="hidden extract-grid">
+          <div class="card"><h3>摘要提取</h3><p id="abstractBox">—</p></div>
+          <div class="card"><h3>关键词热区</h3><div class="keyword-cloud" id="keywordCloud"></div></div>
+          <div class="card"><h3>图表线索</h3><div class="list" id="figureBox"></div></div>
+          <div class="card"><h3>参考文献线索</h3><div class="list" id="referenceBox"></div></div>
+          <div class="card wide"><h3>术语 / 概念</h3><div class="keyword-cloud" id="termBox"></div></div>
+        </div>
+      </section>
+
+      <section class="panel glass tab-panel hidden" id="deepPanel">
+        <div class="panel-title"><h2>深度分析</h2><span class="chip purple">论文七问 / 质量评分 / 修改建议</span></div>
+        <div id="deepEmpty" class="empty">暂无数据。</div>
+        <div id="deepContent" class="hidden">
+          <div class="card wide" style="margin-bottom:16px;">
+            <div class="panel-title" style="margin-bottom:10px;">
+              <h3 style="margin:0;">论文质量诊断</h3>
+              <div class="ring" id="scoreRing"><i>0%</i></div>
+            </div>
+            <div class="deep-score" id="scoreGrid"></div>
           </div>
-          <div class="reader-card wide">
-            <h3>摘要</h3>
-            <p id="abstractBox">—</p>
-          </div>
-          <div class="reader-card wide">
-            <h3>参考文献线索</h3>
-            <div id="referenceBox" style="margin-top:12px; color: var(--text-secondary); line-height: 1.8;"></div>
+          <div class="reader-grid">
+            <div class="card"><span class="badge">01</span><h3>研究对象是什么？</h3><p id="qWhat">—</p></div>
+            <div class="card"><span class="badge">02</span><h3>为什么值得研究？</h3><p id="qWhy">—</p></div>
+            <div class="card"><span class="badge">03</span><h3>用了什么方法？</h3><p id="qHow">—</p></div>
+            <div class="card"><span class="badge">04</span><h3>用了哪些数据或材料？</h3><p id="qData">—</p></div>
+            <div class="card"><span class="badge">05</span><h3>核心结论是什么？</h3><p id="qResult">—</p></div>
+            <div class="card"><span class="badge">06</span><h3>创新点在哪里？</h3><p id="qNew">—</p></div>
+            <div class="card wide"><span class="badge red">07</span><h3>局限与下一步</h3><p id="qLimit">—</p></div>
+            <div class="card wide"><h3>修改建议</h3><div class="list" id="improveList"></div></div>
           </div>
         </div>
       </section>
 
-      <!-- 编辑器 -->
-      <section class="panel glass tab-panel hidden" id="editorPanel">
-        <div class="panel-title">
-          <h2>全景在线编辑</h2>
+      <section class="panel glass tab-panel hidden" id="defensePanel">
+        <div class="panel-title"><h2>答辩提纲</h2><span class="chip green">开题 / 中期 / 毕设答辩</span></div>
+        <div id="defenseEmpty" class="empty">暂无数据。</div>
+        <div id="defenseContent" class="hidden defense-grid">
+          <div class="card wide"><h3>3 分钟答辩陈述</h3><div class="list" id="speechBox"></div></div>
+          <div class="card"><h3>PPT 页结构</h3><div class="list" id="pptOutlineBox"></div></div>
+          <div class="card"><h3>导师可能追问</h3><div class="list" id="questionBox"></div></div>
+          <div class="card wide"><h3>文献矩阵</h3><div class="list" id="literatureMatrixBox"></div></div>
         </div>
+      </section>
+
+      <section class="panel glass tab-panel hidden" id="workspacePanel">
+        <div class="panel-title"><h2>阅读工作台</h2><span class="chip orange">问答 / 笔记 / 书签 / 进度</span></div>
+        <div id="workspaceEmpty" class="empty">暂无数据。</div>
+        <div id="workspaceContent" class="hidden workspace-grid">
+          <div class="card">
+            <h3>本地问答检索</h3>
+            <div class="toolbar">
+              <input id="qaInput" placeholder="问一个问题，例如：这篇论文的方法是什么？"/>
+              <button class="btn primary" id="qaBtn">检索</button>
+            </div>
+            <div class="list" id="qaResult" style="margin-top:12px;"></div>
+          </div>
+          <div class="card">
+            <h3>阅读笔记</h3>
+            <textarea id="noteInput" placeholder="输入你的阅读笔记、导师意见或待修改问题..." style="min-height:110px;"></textarea>
+            <div class="toolbar" style="margin-top:10px;"><button class="btn green" id="addNoteBtn">添加笔记</button><button class="btn" id="clearNotesBtn">清空笔记</button></div>
+            <div class="list" id="noteList" style="margin-top:12px;"></div>
+          </div>
+          <div class="card wide">
+            <h3>章节书签与阅读进度</h3>
+            <div class="list" id="bookmarkList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel glass tab-panel hidden" id="editorPanel">
+        <div class="panel-title"><h2>全景在线编辑</h2><span class="chip">修改后可重新分析</span></div>
         <div class="editor-layout">
           <article class="paper-editor" id="paperEditor" contenteditable="true">
             <div class="empty" style="border:none;">等待上传文档...</div>
           </article>
           <div class="edit-box">
-            <label style="font-size: 13px; color: var(--text-muted); font-weight: 500;">当前选定章节标题</label>
+            <label>当前选定章节标题</label>
             <input id="sectionTitleInput" placeholder="章节标题"/>
-            <label style="font-size: 13px; color: var(--text-muted); font-weight: 500;">章节正文段落</label>
+            <label>章节正文段落</label>
             <textarea id="sectionContentInput" placeholder="在左侧点击章节后即可在此编辑。"></textarea>
             <button class="btn primary" id="updateSectionBtn">同步修改</button>
+            <button class="btn" id="reanalyzeBtn">根据编辑区重新分析</button>
           </div>
         </div>
       </section>
@@ -423,298 +852,942 @@
   </main>
 </div>
 
+<div class="floating-reader">
+  <button class="fab" id="topBtn" title="回到顶部">↑</button>
+  <button class="fab" id="mobileUploadBtn" title="上传">＋</button>
+</div>
+
+<nav class="mobile-bottom-nav" id="mobileNav">
+  <button class="active" data-tab="reader"><strong>⚡</strong>速读</button>
+  <button data-tab="dashboard"><strong>📊</strong>图表</button>
+  <button data-tab="extract"><strong>✂️</strong>提取</button>
+  <button data-tab="deep"><strong>🔍</strong>分析</button>
+  <button data-tab="defense"><strong>🎤</strong>答辩</button>
+  <button data-tab="workspace"><strong>📝</strong>工作</button>
+</nav>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  // PDF.js worker setup
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
   }
 
-  // State Management
+  const $ = id => document.getElementById(id);
   const state = {
-    fileName: "", rawText: "", title: "未命名文档",
-    sections: [], keywords: [], references: [], abstract: "",
-    quick: { problem: "", method: "", result: "", contribution: "" },
-    stats: {}, selectedIndex: -1, charts: {}
+    documents: [],
+    fileName: "",
+    rawText: "",
+    title: "未命名文档",
+    sections: [],
+    keywords: [],
+    terms: [],
+    figures: [],
+    references: [],
+    keySentences: [],
+    abstract: "",
+    quick: { problem:"", method:"", result:"", contribution:"", limitation:"" },
+    seven: {},
+    scores: {},
+    improvements: [],
+    defense: {},
+    stats: {},
+    selectedIndex: -1,
+    charts: {},
+    summaryMode: "one",
+    notes: [],
+    bookmarks: [],
+    reading: {}
   };
 
   const typeMap = {
-    title: "标题", abstract: "摘要", keyword: "关键词", intro: "引言",
-    theory: "理论基础", method: "研究方法", user: "用户调研", design: "设计实践",
-    result: "结果分析", discussion: "讨论", conclusion: "结论", reference: "参考文献", other: "正文"
+    title:"标题", abstract:"摘要", keyword:"关键词", intro:"引言",
+    theory:"理论", method:"方法", user:"用户研究", design:"设计实践",
+    result:"结果", discussion:"讨论", conclusion:"结论", reference:"文献", other:"正文"
   };
 
-  const $ = id => document.getElementById(id);
   const els = {
-    fileInput: $("fileInput"), dropzone: $("dropzone"), sectionList: $("sectionList"),
-    paperEditor: $("paperEditor"), sectionTitleInput: $("sectionTitleInput"), sectionContentInput: $("sectionContentInput")
+    fileInput:$("fileInput"), dropzone:$("dropzone"), fileList:$("fileList"), sectionList:$("sectionList"),
+    paperEditor:$("paperEditor"), sectionTitleInput:$("sectionTitleInput"), sectionContentInput:$("sectionContentInput"),
+    globalProgress:$("globalProgress")
   };
 
-  // Utils
-  function toast(msg) {
+  function toast(msg){
     const t = $("toast");
     t.textContent = msg;
     t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2500);
+    setTimeout(() => t.classList.remove("show"), 2600);
+  }
+  function setProgress(v){ els.globalProgress.style.width = Math.max(0,Math.min(100,v)) + "%"; }
+  function escapeHtml(str){ return String(str || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function stripHtml(html){ const div=document.createElement("div"); div.innerHTML=html; return div.innerText || div.textContent || ""; }
+  function stripXmlTags(xml){ return xml.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(); }
+  function stripRtf(rtf){ return rtf.replace(/\\'[0-9a-fA-F]{2}/g," ").replace(/\\[a-z]+\d* ?/g," ").replace(/[{}]/g," ").replace(/\s+/g," ").trim(); }
+  function normalizeText(text){ return (text || "").replace(/\r/g,"\n").replace(/\u00A0/g," ").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim(); }
+  function countWords(text){
+    return (text.match(/[\u4e00-\u9fa5]/g)||[]).length + (text.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)?/g)||[]).length;
+  }
+  function splitSentences(text){
+    return normalizeText(text).replace(/\n+/g,"。").split(/(?<=[。！？!?；;])\s*|(?<=\.)\s+(?=[A-Z])/).map(s=>s.trim()).filter(s=>s.length>12 && s.length<280);
+  }
+  function extOf(name){ return (name.split(".").pop() || "").toLowerCase(); }
+  function bytes(n){ if(n<1024) return n+" B"; if(n<1024*1024) return (n/1024).toFixed(1)+" KB"; return (n/1024/1024).toFixed(1)+" MB"; }
+  function decodeXml(str){ const div=document.createElement("div"); div.innerHTML=str.replace(/&apos;/g,"'"); return div.textContent || div.innerText || str; }
+
+  async function readPdf(file){
+    const typed = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data: typed }).promise;
+    let text = "";
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += `\n\n--- PDF Page ${i} ---\n` + content.items.map(item => item.str).join(" ");
+      setProgress(Math.round(i/pdf.numPages*90));
+    }
+    return text;
+  }
+  async function readSpreadsheet(file){
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data, { type:"array" });
+    let text = "";
+    workbook.SheetNames.forEach(name => {
+      text += `\n\n# Sheet: ${name}\n${XLSX.utils.sheet_to_csv(workbook.Sheets[name])}`;
+    });
+    return text;
+  }
+  async function readPptx(file){
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const slideFiles = Object.keys(zip.files).filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name)).sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));
+    let text = "";
+    for(const name of slideFiles){
+      const xml = await zip.files[name].async("text");
+      const no = name.match(/slide(\d+)/)[1];
+      const parts = [...xml.matchAll(/<a:t>([\s\S]*?)<\/a:t>/g)].map(m => decodeXml(m[1]));
+      text += `\n\n# Slide ${no}\n${parts.join("\n")}`;
+    }
+    return text;
+  }
+  async function readEpub(file){
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const htmlFiles = Object.keys(zip.files).filter(name => /\.(xhtml|html|htm)$/i.test(name)).sort();
+    let text = "";
+    for(const name of htmlFiles.slice(0,80)){
+      text += `\n\n# ${name}\n${stripHtml(await zip.files[name].async("text"))}`;
+    }
+    return text;
+  }
+  async function readImageOcr(file){
+    if(!window.Tesseract) throw new Error("OCR 库加载失败");
+    const result = await Tesseract.recognize(file, "chi_sim+eng", {
+      logger:m => { if(m.status === "recognizing text") setProgress(Math.round((m.progress || 0) * 100)); }
+    });
+    return result.data.text;
   }
 
-  function escapeHtml(str) {
-    return String(str || "").replace(/[&<>"']/g, m => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-    })[m]);
+  async function readFileUniversal(file,index,total){
+    const ext = extOf(file.name);
+    updateFileStatus(file.name,"读取中");
+    setProgress(Math.round(index/Math.max(1,total)*100));
+    try{
+      let text = "";
+      if(["txt","md","markdown","csv","log"].includes(ext)) text = await file.text();
+      else if(["html","htm"].includes(ext)) text = stripHtml(await file.text());
+      else if(ext === "rtf") text = stripRtf(await file.text());
+      else if(["json","xml"].includes(ext)){
+        text = await file.text();
+        if(ext === "json"){ try{text = JSON.stringify(JSON.parse(text), null, 2)}catch(e){} }
+        else text = stripXmlTags(text);
+      }
+      else if(ext === "docx") text = (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+      else if(ext === "pdf") text = await readPdf(file);
+      else if(["xlsx","xls"].includes(ext)) text = await readSpreadsheet(file);
+      else if(ext === "pptx") text = await readPptx(file);
+      else if(ext === "epub") text = await readEpub(file);
+      else if(["jpg","jpeg","png","webp","bmp"].includes(ext)) text = await readImageOcr(file);
+      else if(ext === "doc") throw new Error("旧版 .doc 请转成 .docx");
+      else text = await file.text();
+
+      text = normalizeText(text);
+      if(!text) throw new Error("未提取到文本");
+      updateFileStatus(file.name,"已读取","ok");
+      return { name:file.name, ext, size:file.size, text, words:countWords(text), status:"ok" };
+    }catch(err){
+      updateFileStatus(file.name,"失败","warn");
+      return { name:file.name, ext, size:file.size, text:"", words:0, status:"error", error:err.message };
+    }
   }
 
-  function countWords(text) {
-    return (text.match(/[\u4e00-\u9fa5]/g) || []).length + (text.match(/[A-Za-z0-9]+/g) || []).length;
+  function preRenderFileQueue(files){
+    $("fileCountLabel").textContent = `${files.length} 个文件`;
+    els.fileList.innerHTML = [...files].map(file => `
+      <div class="file-item" data-file="${escapeHtml(file.name)}">
+        <div><b>${escapeHtml(file.name)}</b><span>${escapeHtml(extOf(file.name).toUpperCase())} · ${bytes(file.size)}</span></div>
+        <span class="status-pill">等待</span>
+      </div>
+    `).join("");
+  }
+  function updateFileStatus(fileName,status,cls=""){
+    const item = [...document.querySelectorAll(".file-item")].find(el => el.dataset.file === fileName);
+    if(!item) return;
+    const pill = item.querySelector(".status-pill");
+    pill.textContent = status;
+    pill.className = `status-pill ${cls}`;
+  }
+  async function handleFiles(files){
+    const arr = [...files];
+    if(!arr.length) return;
+    preRenderFileQueue(arr);
+    toast(`开始读取 ${arr.length} 个文件...`);
+    const docs = [];
+    for(let i=0;i<arr.length;i++){
+      docs.push(await readFileUniversal(arr[i], i, arr.length));
+    }
+    setProgress(100);
+    state.documents = docs;
+    const ok = docs.filter(d => d.status === "ok");
+    if(!ok.length) return toast("没有成功读取的文件。");
+    const merged = ok.map((d,i) => `# 文档 ${i+1}：${d.name}\n\n${d.text}`).join("\n\n");
+    analyzePaper(merged, ok.map(d=>d.name).join(" + "));
+    setTimeout(() => setProgress(0), 1200);
   }
 
-  // Parsing Logic (Simplified from original for layout integration)
-  function isHeading(line) {
+  function cleanHeading(line){
+    return line.replace(/^#+\s*/,"").replace(/^第[一二三四五六七八九十百\d]+[章节篇]\s*/,"").replace(/^[一二三四五六七八九十]+[、.]\s*/,"").replace(/^\d+(\.\d+)*[、.)]?\s*/,"").trim();
+  }
+  function isHeading(line){
     const s = line.trim();
-    if (!s || s.length > 48) return false;
-    return /^#+\s+/.test(s) || /^[第一二三四五六七八九十]+[章节篇]/.test(s) || 
-           /^(摘要|Abstract|关键词|Keywords|引言|研究背景|文献综述|研究方法|结果分析|结论|参考文献)$/i.test(s);
+    if(!s || s.length > 58) return false;
+    return /^#+\s+/.test(s) ||
+      /^第[一二三四五六七八九十百\d]+[章节篇]/.test(s) ||
+      /^[一二三四五六七八九十]+[、.]/.test(s) ||
+      /^\d+(\.\d+)*[、.)]?\s*[\u4e00-\u9fa5A-Za-z]/.test(s) ||
+      /^(摘要|Abstract|关键词|Keywords|引言|绪论|研究背景|文献综述|相关研究|理论基础|研究方法|方法|用户研究|需求分析|设计策略|设计实践|系统设计|实验|结果分析|可用性测试|讨论|结论|总结与展望|参考文献|References|致谢)$/i.test(s);
   }
-
-  function inferSectionType(title) {
+  function inferSectionType(title){
     const t = title.toLowerCase();
-    if (/摘要|abstract/.test(t)) return "abstract";
-    if (/引言|背景|绪论/.test(t)) return "intro";
-    if (/方法|模型|流程|测试/.test(t)) return "method";
-    if (/结果|分析|结论|总结/.test(t)) return "result";
-    if (/文献|参考/.test(t)) return "reference";
+    if(/题名|标题|title/.test(t)) return "title";
+    if(/摘要|abstract/.test(t)) return "abstract";
+    if(/关键词|keywords?/.test(t)) return "keyword";
+    if(/绪论|引言|背景|introduction|background/.test(t)) return "intro";
+    if(/理论|概念|文献|综述|相关研究|literature|theory/.test(t)) return "theory";
+    if(/方法|method|路径|模型|流程|实验|experiment/.test(t)) return "method";
+    if(/用户|访谈|问卷|调研|需求|user|survey|interview/.test(t)) return "user";
+    if(/设计|实践|系统|原型|界面|交互|策略|design|prototype/.test(t)) return "design";
+    if(/结果|分析|评估|测试|数据|result|analysis|evaluation/.test(t)) return "result";
+    if(/讨论|discussion/.test(t)) return "discussion";
+    if(/结论|总结|展望|conclusion/.test(t)) return "conclusion";
+    if(/参考文献|references|bibliography/.test(t)) return "reference";
     return "other";
   }
-
-  function parseSections(text) {
-    const lines = text.replace(/\r/g, "\n").split("\n").map(l => l.trim()).filter(Boolean);
-    if (!lines.length) return [];
-    
-    let sections = [{ title: lines[0].slice(0, 50), type: "title", content: lines[0], words: countWords(lines[0]) }];
+  function parseSections(text){
+    const lines = normalizeText(text).split("\n").map(l=>l.trim()).filter(Boolean);
+    if(!lines.length) return [];
+    const first = lines.find(l => l.length > 3) || lines[0];
+    const title = cleanHeading(first).slice(0,100);
+    const sections = [{ title, type:"title", content:first, words:countWords(first) }];
     let current = null;
-
-    for (let i = 1; i < lines.length; i++) {
-      if (isHeading(lines[i])) {
-        if (current) {
-          current.content = current.buffer.join("\n\n");
+    for(let i=lines.indexOf(first)+1;i<lines.length;i++){
+      const line = lines[i];
+      if(isHeading(line)){
+        if(current){
+          current.content = current.buffer.join("\n").trim();
           current.words = countWords(current.content);
+          delete current.buffer;
           sections.push(current);
         }
-        current = { title: lines[i].replace(/^#+\s*/, ''), type: inferSectionType(lines[i]), buffer: [] };
-      } else if (current) {
-        current.buffer.push(lines[i]);
-      } else {
-        current = { title: "正文导入", type: "other", buffer: [lines[i]] };
-      }
+        const t = cleanHeading(line) || line;
+        current = { title:t, type:inferSectionType(t), buffer:[] };
+      }else if(current) current.buffer.push(line);
+      else current = { title:"正文导入", type:"other", buffer:[line] };
     }
-    if (current) {
-      current.content = current.buffer.join("\n\n");
+    if(current){
+      current.content = current.buffer.join("\n").trim();
       current.words = countWords(current.content);
+      delete current.buffer;
       sections.push(current);
+    }
+    if(sections.length <= 2 && text.length > 600){
+      const chunks = normalizeText(text).split(/\n{2,}/).filter(Boolean).slice(0,32);
+      return [{ title, type:"title", content:title, words:countWords(title) }, ...chunks.map((p,i)=>({ title:i===0?"正文导入":`段落 ${i+1}`, type:"other", content:p, words:countWords(p) }))];
     }
     return sections;
   }
 
-  function analyzePaper(text, fileName = "未命名") {
-    state.rawText = text;
-    state.sections = parseSections(text);
-    state.title = state.sections[0]?.title || "文档";
-    
-    // Naive Extraction for Demo
-    const absSec = state.sections.find(s => s.type === "abstract");
-    state.abstract = absSec ? absSec.content : text.slice(0, 300) + "...";
-    
-    state.stats = {
-      words: countWords(text),
-      readTime: Math.ceil(countWords(text) / 400),
-      sections: state.sections.length,
-      keywords: 6, refs: 12, score: 85
-    };
-    
-    // Quick populate mock data from text
-    state.quick.problem = "基于当前语境提炼出的核心研究问题或行业痛点。";
-    state.quick.method = "所采用的模型、框架或研究流派。";
-    state.quick.result = "最终得到的核心数据、方案反馈或理论结论。";
-    state.quick.contribution = "本研究对该领域的独特补充。";
-    state.keywords = ["用户体验", "极简设计", "生成式模型", "转化率", "交互策略"];
-    state.references = ["[1] Apple Human Interface Guidelines.", "[2] 设计心理学 - 唐纳德·诺曼"];
+  function extractAbstract(text, sections){
+    const sec = sections.find(s => s.type === "abstract");
+    if(sec && sec.content) return sec.content.slice(0,950);
+    const m = text.match(/摘要[:：\s]*([\s\S]{80,950}?)(关键词|关键字|Abstract|第[一二三四五六七八九十\d]+[章节]|1[、.]\s*|引言|绪论)/i);
+    if(m) return m[1].trim();
+    return splitSentences(text).slice(0,4).join("") || "未识别到摘要。";
+  }
+  function extractKeywords(text, sections){
+    const explicit = [];
+    const keywordSec = sections.find(s => s.type === "keyword" || /关键词|keywords/i.test(s.title));
+    if(keywordSec){
+      keywordSec.content.replace(/关键词|关键字|keywords|：|:/ig," ").split(/[，,；;、\s]+/).map(x=>x.trim()).filter(x=>x && x.length<=18).forEach(x=>explicit.push(x));
+    }
+    const m = text.match(/关键词[:：\s]*([^\n。]{6,140})/i);
+    if(m) m[1].split(/[，,；;、\s]+/).map(x=>x.trim()).filter(x=>x && x.length<=18).forEach(x=>explicit.push(x));
+    if(explicit.length >= 3) return [...new Set(explicit)].slice(0,32);
 
-    updateUI();
-    toast("解析已完成");
+    const stop = new Set("研究 设计 论文 本文 通过 进行 基于 分析 方法 系统 用户 内容 相关 可以 具有 实现 主要 需要 问题 过程 结果 提出 探讨 视角 发展 影响 文档 文件 章节 数据 以及 由于 因此 and the for with this that from paper study design method based analysis research".split(/\s+/));
+    const pool = {};
+    (text.match(/[\u4e00-\u9fa5]{2,8}/g)||[]).forEach(w => { if(!stop.has(w) && !/^[一二三四五六七八九十]+$/.test(w)) pool[w]=(pool[w]||0)+1; });
+    (text.match(/[A-Za-z][A-Za-z-]{3,}/g)||[]).forEach(w => { const k=w.toLowerCase(); if(!stop.has(k)) pool[w]=(pool[w]||0)+1; });
+    return Object.entries(pool).sort((a,b)=>b[1]-a[1]).slice(0,32).map(([k])=>k);
+  }
+  function extractFigures(text){
+    const hits = [];
+    normalizeText(text).split("\n").forEach(line => {
+      if(/(图|表|Figure|Table)\s*\d+|图[一二三四五六七八九十]+|表[一二三四五六七八九十]+/.test(line)) hits.push(line.slice(0,150));
+    });
+    (text.match(/(图|表)\s*\d+[-—:：\s]*[\u4e00-\u9fa5A-Za-z0-9（）()、，,.\s]{0,75}/g)||[]).forEach(x=>hits.push(x.trim()));
+    return [...new Set(hits)].slice(0,20);
+  }
+  function extractReferences(text, sections){
+    const refs = [];
+    const sec = sections.find(s => s.type === "reference");
+    if(sec) sec.content.split("\n").map(x=>x.trim()).filter(x=>x.length>8).forEach(x=>refs.push(x.slice(0,220)));
+    (text.match(/\[\d+\][^\n]{8,220}/g)||[]).forEach(x=>refs.push(x.trim()));
+    return [...new Set(refs)].slice(0,36);
+  }
+  function extractTerms(text, keywords){
+    const preset = ["用户体验","信息架构","交互设计","虚拟空间","数字媒体","数字博物馆","可用性测试","空间叙事","知识图谱","情感体验","沉浸体验","服务设计","人机交互","视觉传达","设计策略","原型设计","问卷调查","用户访谈","案例分析","文献研究","可视化","人工智能","大语言模型","多模态","跨境电商","生成式AI","机器人","深度学习","论文可视化","OCR","移动端适配"];
+    const found = preset.filter(t => text.includes(t));
+    keywords.forEach(k => { if(k.length>=3 && !found.includes(k)) found.push(k); });
+    return found.slice(0,36);
+  }
+  function sentenceScore(sentence, keywords){
+    let score = 0;
+    keywords.forEach(k => { if(k && sentence.includes(k)) score += 2; });
+    ["本文","本研究","研究发现","结果表明","提出","构建","创新","贡献","意义","方法","模型","框架","策略","问题","不足","展望","conclusion","result","method"].forEach(m => {
+      if(sentence.toLowerCase().includes(m.toLowerCase())) score += 3;
+    });
+    if(sentence.length > 35 && sentence.length < 180) score += 1;
+    return score;
+  }
+  function extractKeySentences(text, keywords){
+    return splitSentences(text).map(s=>({s, score:sentenceScore(s, keywords)})).filter(x=>x.score>1).sort((a,b)=>b.score-a.score).slice(0,12).map(x=>x.s);
+  }
+  function findSection(types){ return state.sections.find(s => types.includes(s.type)); }
+  function chooseSentence(patterns, fallbackText, label){
+    const sentences = splitSentences(fallbackText);
+    const hit = sentences.find(s => patterns.some(p => p.test(s)));
+    if(hit) return hit;
+    const section = state.sections.find(s => patterns.some(p => p.test(s.title)));
+    if(section) return splitSentences(section.content)[0] || section.content.slice(0,160);
+    return `暂未直接识别到${label}，建议查看摘要、绪论、研究方法和结论部分。`;
+  }
+  function scoreStructure(types, refs, keywords){
+    const checks = [
+      types.has("abstract"), types.has("keyword"), types.has("intro"), types.has("theory"),
+      types.has("method") || types.has("user"), types.has("design") || types.has("result"),
+      types.has("conclusion"), refs.length >= 6, keywords.length >= 3
+    ];
+    return Math.round(checks.filter(Boolean).length / checks.length * 100);
   }
 
-  // UI Updates
-  function updateUI() {
-    $("wordCount").textContent = state.stats.words;
-    $("readTime").textContent = state.stats.readTime + "m";
-    $("sectionCount").textContent = state.stats.sections;
-    $("keywordCount").textContent = state.stats.keywords;
-    $("refCount").textContent = state.stats.refs;
-    $("scoreCount").textContent = state.stats.score + "%";
+  function generateQuick(){
+    const intro = findSection(["intro","abstract"])?.content || state.abstract;
+    const method = findSection(["method","user"])?.content || state.rawText;
+    const result = findSection(["result","conclusion","discussion"])?.content || state.rawText;
+    state.quick.problem = chooseSentence([/问题|痛点|不足|需求|目的|目标|aim|purpose|problem/i], state.abstract + "。" + intro, "研究问题");
+    state.quick.method = chooseSentence([/方法|路径|模型|框架|问卷|访谈|实验|案例|method|survey|interview|experiment/i], method, "研究方法");
+    state.quick.result = chooseSentence([/结果|表明|发现|证明|提升|验证|结论|result|finding|conclusion/i], result, "研究结论");
+    state.quick.contribution = chooseSentence([/创新|贡献|价值|意义|构建|提出|优化|contribution|innovation/i], state.abstract + "。" + result, "创新价值");
+    state.quick.limitation = chooseSentence([/不足|局限|限制|未来|展望|limitation|future/i], result, "研究局限");
+  }
+
+  function generateDeepAnalysis(){
+    const types = new Set(state.sections.map(s => s.type));
+    const score = state.stats.score || 0;
+    const methodScore = (types.has("method") || types.has("user")) ? 88 : 45;
+    const structureScore = score;
+    const evidenceScore = Math.min(95, 45 + state.references.length * 5 + state.figures.length * 4);
+    const readabilityScore = Math.max(48, Math.min(92, 92 - Math.floor((state.stats.words || 0) / Math.max(1,state.sections.length || 1) / 350)));
+    state.scores = { structureScore, methodScore, evidenceScore, readabilityScore };
+
+    state.seven = {
+      what: state.title,
+      why: state.quick.problem,
+      how: state.quick.method,
+      data: chooseSentence([/问卷|访谈|样本|数据|案例|实验|材料|用户|survey|data|sample/i], state.rawText, "数据或材料"),
+      result: state.quick.result,
+      new: state.quick.contribution,
+      limit: state.quick.limitation
+    };
+
+    const imps = [];
+    if(!types.has("abstract")) imps.push("补充摘要：建议摘要包含背景、方法、结果和创新点。");
+    if(!types.has("method") && !types.has("user")) imps.push("强化研究方法：单独说明文献研究、案例分析、问卷访谈或实验流程。");
+    if(state.references.length < 8) imps.push("补充参考文献：建议加入近五年论文，提高理论依据可信度。");
+    if(state.figures.length < 2) imps.push("增加图表：建议加入信息架构图、流程图、数据统计图或用户旅程图。");
+    if(!types.has("conclusion")) imps.push("完善结论：总结研究发现、创新价值、局限和未来方向。");
+    if(!imps.length) imps.push("结构较完整：下一步可以重点优化章节衔接、图表说明和创新点表达。");
+    state.improvements = imps;
+  }
+
+  function generateDefense(){
+    state.defense = {
+      speech: [
+        `各位老师好，我的论文题目是《${state.title}》。`,
+        `本研究主要关注：${state.quick.problem}`,
+        `研究方法方面：${state.quick.method}`,
+        `研究结果显示：${state.quick.result}`,
+        `本研究的创新价值在于：${state.quick.contribution}`,
+        `最后，研究仍存在一定局限：${state.quick.limitation}`
+      ],
+      ppt: [
+        "封面：论文题目、姓名、专业、导师",
+        "研究背景：为什么要做这个课题",
+        "研究问题：论文要解决的核心问题",
+        "理论基础与文献综述：已有研究与不足",
+        "研究方法：调研、访谈、实验或设计流程",
+        "设计/系统实践：方案结构与关键页面",
+        "结果分析：测试反馈、数据图表、优化结果",
+        "结论与展望：创新点、局限和未来方向"
+      ],
+      questions: [
+        "你的研究对象为什么选择这个案例？",
+        "论文的创新点和已有研究相比在哪里？",
+        "用户调研样本是否具有代表性？",
+        "设计方案如何验证有效性？",
+        "如果继续深化，你会优先优化哪一部分？"
+      ],
+      matrix: state.references.slice(0,8).map((r,i) => `文献 ${i+1}：${r}`)
+    };
+  }
+
+  function analyzePaper(text, fileName="未命名"){
+    const clean = normalizeText(text);
+    state.rawText = clean;
+    state.fileName = fileName;
+    state.sections = parseSections(clean);
+    state.title = state.sections[0]?.title || "文档";
+    state.abstract = extractAbstract(clean, state.sections);
+    state.keywords = extractKeywords(clean, state.sections);
+    state.terms = extractTerms(clean, state.keywords);
+    state.figures = extractFigures(clean);
+    state.references = extractReferences(clean, state.sections);
+    state.keySentences = extractKeySentences(clean, state.keywords);
+
+    const types = new Set(state.sections.map(s => s.type));
+    state.stats = {
+      docs: state.documents.filter(d=>d.status==="ok").length || 1,
+      words: countWords(clean),
+      readTime: Math.max(1, Math.ceil(countWords(clean)/450)),
+      sections: state.sections.length,
+      keywords: state.keywords.length,
+      refs: state.references.length,
+      score: scoreStructure(types, state.references, state.keywords)
+    };
+    generateQuick();
+    generateDeepAnalysis();
+    generateDefense();
+    updateUI();
+    saveLocal();
+    toast("解析完成：已生成速读、深度分析、答辩提纲和移动端布局。");
+  }
+
+  function updateUI(){
+    $("docCount").textContent = state.stats.docs || 0;
+    $("wordCount").textContent = state.stats.words || 0;
+    $("readTime").textContent = (state.stats.readTime || 0) + "m";
+    $("sectionCount").textContent = state.stats.sections || 0;
+    $("keywordCount").textContent = state.stats.keywords || 0;
+    $("scoreCount").textContent = (state.stats.score || 0) + "%";
 
     renderSidebar();
     renderReader();
+    renderExtract();
+    renderDeep();
+    renderDefense();
+    renderWorkspace();
     renderEditor();
-    
-    ["reader", "dashboard", "extract"].forEach(id => {
-      $(`${id}Empty`).classList.add("hidden");
-      $(`${id}Content`).classList.remove("hidden");
+
+    ["reader","dashboard","extract","deep","defense","workspace"].forEach(id => {
+      $(`${id}Empty`)?.classList.add("hidden");
+      $(`${id}Content`)?.classList.remove("hidden");
     });
-    
-    setTimeout(renderCharts, 100);
+    setTimeout(renderCharts,100);
+    setDeviceMode();
   }
 
-  function renderSidebar() {
-    els.sectionList.innerHTML = state.sections.map((s, i) => `
-      <div class="sec-card ${i === state.selectedIndex ? "active" : ""}" data-index="${i}">
+  function renderSidebar(){
+    if(!state.sections.length){
+      els.sectionList.innerHTML = '<div class="empty" style="padding:30px 10px;border:none;">等待上传文档...</div>';
+      return;
+    }
+    const max = Math.max(...state.sections.map(s=>s.words||0),1);
+    els.sectionList.innerHTML = state.sections.map((s,i)=>`
+      <div class="sec-card ${i===state.selectedIndex?"active":""}" data-index="${i}">
         <div class="name"><span>${escapeHtml(s.title)}</span><em>${typeMap[s.type] || "正文"}</em></div>
-        <div class="meta">${s.words || 0} 字</div>
+        <div class="meta">${s.words || 0} 字 · 点击定位</div>
+        <div class="mini-meter"><i style="width:${Math.max(4,Math.round((s.words||0)/max*100))}%"></i></div>
       </div>
     `).join("");
-
-    document.querySelectorAll(".sec-card").forEach(card => {
-      card.onclick = () => selectSection(Number(card.dataset.index));
-    });
+    document.querySelectorAll(".sec-card").forEach(card => card.onclick = () => selectSection(Number(card.dataset.index)));
   }
 
-  function renderReader() {
-    $("mainSummaryCard").innerHTML = `
-      <span class="badge">Executive Summary</span>
-      <h3 style="font-size:22px;">${escapeHtml(state.title)}</h3>
-      <p style="margin-top:12px;"><b>摘要提炼：</b>${escapeHtml(state.abstract)}</p>
-    `;
+  function summaryHtml(){
+    const keys = state.keywords.slice(0,9).map(k=>`<span class="chip">${escapeHtml(k)}</span>`).join(" ");
+    if(state.summaryMode === "five"){
+      return `<span class="badge">5 Minute Read</span><h3>${escapeHtml(state.title)}</h3>
+        <ul>
+          <li><b>研究问题：</b>${escapeHtml(state.quick.problem)}</li>
+          <li><b>研究方法：</b>${escapeHtml(state.quick.method)}</li>
+          <li><b>核心结论：</b>${escapeHtml(state.quick.result)}</li>
+          <li><b>创新价值：</b>${escapeHtml(state.quick.contribution)}</li>
+          <li><b>局限展望：</b>${escapeHtml(state.quick.limitation)}</li>
+        </ul>`;
+    }
+    if(state.summaryMode === "deep"){
+      return `<span class="badge">Deep Outline</span><h3>${escapeHtml(state.title)}</h3>
+        <ul>
+          <li>第一步：读标题、摘要、关键词，确定研究对象与方向。</li>
+          <li>第二步：读绪论和文献综述，找研究问题与理论依据。</li>
+          <li>第三步：读研究方法和实践过程，判断方案是否可信。</li>
+          <li>第四步：读结果、结论、图表和参考文献，提炼可复用方法。</li>
+        </ul>`;
+    }
+    return `<span class="badge">Executive Summary</span><h3>${escapeHtml(state.title)}</h3>
+      <p><b>一句话速读：</b>${escapeHtml(state.abstract.slice(0,280))}${state.abstract.length>280?"……":""}</p>
+      <p style="margin-top:12px;"><b>核心关键词：</b>${keys || "暂无关键词"}</p>`;
+  }
+
+  function renderReader(){
+    $("mainSummaryCard").innerHTML = summaryHtml();
     $("problemText").textContent = state.quick.problem;
     $("methodText").textContent = state.quick.method;
     $("resultText").textContent = state.quick.result;
     $("contributionText").textContent = state.quick.contribution;
-    
-    $("keywordCloud").innerHTML = state.keywords.map(k => `<span class="keyword">${escapeHtml(k)}</span>`).join("");
-    $("abstractBox").textContent = state.abstract;
-    $("referenceBox").innerHTML = state.references.map(r => `<div>${escapeHtml(r)}</div>`).join("");
+    $("keySentenceList").innerHTML = (state.keySentences.length ? state.keySentences : ["暂未提取到关键句。"]).slice(0,9).map(s=>`<li class="key-sentence" data-term="${escapeHtml(s.slice(0,18))}">${escapeHtml(s)}</li>`).join("");
+    document.querySelectorAll(".card.clickable").forEach(card => {
+      card.onclick = () => {
+        const map = { problem:["intro","abstract"], method:["method","user"], result:["result","conclusion"], contribution:["abstract","conclusion"] };
+        const idx = state.sections.findIndex(s => (map[card.dataset.jump] || []).includes(s.type));
+        if(idx >= 0) selectSection(idx);
+      };
+    });
+    document.querySelectorAll(".key-sentence").forEach(li => {
+      li.style.cursor = "pointer";
+      li.onclick = () => { switchTab("editor"); highlightTerm(li.dataset.term); };
+    });
   }
 
-  function renderEditor() {
-    els.paperEditor.innerHTML = `<h1>${escapeHtml(state.title)}</h1>` + 
-      state.sections.slice(1).map((s, i) => `
-        <section data-section="${i+1}">
-          <h2>${escapeHtml(s.title)}</h2>
-          ${escapeHtml(s.content).split('\n').map(p => `<p>${p}</p>`).join('')}
-        </section>
-      `).join("");
+  function renderExtract(){
+    $("abstractBox").textContent = state.abstract || "—";
+    $("keywordCloud").innerHTML = state.keywords.length ? state.keywords.map(k=>`<button class="keyword" data-key="${escapeHtml(k)}"># ${escapeHtml(k)}</button>`).join("") : '<span class="chip">暂无关键词</span>';
+    $("figureBox").innerHTML = state.figures.length ? state.figures.map(x=>`<div class="list-item">${escapeHtml(x)}</div>`).join("") : '<div class="list-item">暂未识别到图表编号。</div>';
+    $("referenceBox").innerHTML = state.references.length ? state.references.slice(0,14).map(x=>`<div class="list-item">${escapeHtml(x)}</div>`).join("") : '<div class="list-item">暂未识别到参考文献。</div>';
+    $("termBox").innerHTML = state.terms.length ? state.terms.map(k=>`<button class="keyword" data-key="${escapeHtml(k)}">${escapeHtml(k)}</button>`).join("") : '<span class="chip">暂无术语</span>';
+    document.querySelectorAll(".keyword").forEach(btn => btn.onclick = () => { switchTab("editor"); highlightTerm(btn.dataset.key); });
   }
 
-  function selectSection(index) {
-    state.selectedIndex = index;
-    const sec = state.sections[index];
-    els.sectionTitleInput.value = sec.title;
-    els.sectionContentInput.value = sec.content;
-    renderSidebar();
-    
-    const target = els.paperEditor.querySelector(`[data-section="${index}"]`);
-    if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+  function renderDeep(){
+    const s = state.stats.score || 0;
+    $("scoreRing").style.background = `conic-gradient(var(--blue) ${s*3.6}deg, rgba(118,118,128,.18) 0deg)`;
+    $("scoreRing").innerHTML = `<i>${s}%</i>`;
+    const rows = [
+      ["结构完整", state.scores.structureScore || 0, "摘要、方法、结论、文献"],
+      ["方法清晰", state.scores.methodScore || 0, "研究路径与样本材料"],
+      ["证据支撑", state.scores.evidenceScore || 0, "图表、引用、数据"],
+      ["可读性", state.scores.readabilityScore || 0, "篇幅均衡与表达"]
+    ];
+    $("scoreGrid").innerHTML = rows.map(r => `<div class="score-card"><span>${r[0]}</span><b>${r[1]}%</b><small style="color:var(--muted)">${r[2]}</small></div>`).join("");
+    $("qWhat").textContent = state.seven.what || "—";
+    $("qWhy").textContent = state.seven.why || "—";
+    $("qHow").textContent = state.seven.how || "—";
+    $("qData").textContent = state.seven.data || "—";
+    $("qResult").textContent = state.seven.result || "—";
+    $("qNew").textContent = state.seven.new || "—";
+    $("qLimit").textContent = state.seven.limit || "—";
+    $("improveList").innerHTML = state.improvements.map((x,i)=>`<div class="list-item"><b>${i+1}. </b>${escapeHtml(x)}</div>`).join("");
   }
 
-  function renderCharts() {
-    if (!window.echarts || !state.sections.length) return;
-    const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim();
-    const mutedColor = getComputedStyle(document.body).getPropertyValue('--text-muted').trim();
-    const themeBlue = getComputedStyle(document.body).getPropertyValue('--sys-blue').trim();
-    
-    const secData = state.sections.slice(1).map(s => s.words || 0);
-    const secNames = state.sections.slice(1).map(s => s.title.slice(0,6) + "..");
+  function renderDefense(){
+    $("speechBox").innerHTML = (state.defense.speech || []).map((x,i)=>`<div class="list-item"><b>${i+1}</b> ${escapeHtml(x)}</div>`).join("");
+    $("pptOutlineBox").innerHTML = (state.defense.ppt || []).map((x,i)=>`<div class="list-item">${i+1}. ${escapeHtml(x)}</div>`).join("");
+    $("questionBox").innerHTML = (state.defense.questions || []).map((x,i)=>`<div class="list-item">Q${i+1}: ${escapeHtml(x)}</div>`).join("");
+    $("literatureMatrixBox").innerHTML = (state.defense.matrix && state.defense.matrix.length ? state.defense.matrix : ["暂未识别到足够参考文献。"]).map(x=>`<div class="list-item">${escapeHtml(x)}</div>`).join("");
+  }
 
-    const baseOption = {
-      backgroundColor: 'transparent',
-      textStyle: { fontFamily: '-apple-system' }
-    };
+  function renderWorkspace(){
+    $("noteList").innerHTML = state.notes.length ? state.notes.map((n,i)=>`<div class="list-item"><b>笔记 ${i+1}</b><br>${escapeHtml(n)}</div>`).join("") : '<div class="list-item">暂无笔记。</div>';
+    $("bookmarkList").innerHTML = state.bookmarks.length ? state.bookmarks.map((b,i)=>`<div class="list-item" data-bookmark="${b.index}"><b>${i+1}. ${escapeHtml(b.title)}</b><br>${b.words || 0} 字</div>`).join("") : '<div class="list-item">暂无书签。选择章节后点击“书签”。</div>';
+    document.querySelectorAll("[data-bookmark]").forEach(el => el.onclick = () => selectSection(Number(el.dataset.bookmark)));
+  }
+
+  function renderEditor(){
+    if(!state.sections.length){
+      els.paperEditor.innerHTML = '<div class="empty" style="border:none;">等待上传文档...</div>';
+      return;
+    }
+    els.paperEditor.innerHTML = `<h1>${escapeHtml(state.title)}</h1>` + state.sections.slice(1).map((s,i)=>`
+      <section data-section="${i+1}">
+        <h2>${escapeHtml(s.title)}</h2>
+        ${escapeHtml(s.content).split("\n").filter(Boolean).map(p=>`<p>${p}</p>`).join("")}
+      </section>
+    `).join("");
+  }
+
+  function renderCharts(){
+    if(!window.echarts || !state.sections.length) return;
+    const textColor = getComputedStyle(document.body).getPropertyValue("--text").trim();
+    const mutedColor = getComputedStyle(document.body).getPropertyValue("--muted").trim();
+    const blue = getComputedStyle(document.body).getPropertyValue("--blue").trim();
+    const green = getComputedStyle(document.body).getPropertyValue("--green").trim();
+    const sec = state.sections.filter(s=>s.type!=="title");
+    const secNames = sec.map(s=>s.title.length>8?s.title.slice(0,8)+"…":s.title);
+    const secWords = sec.map(s=>s.words||0);
+    const typeCount = {};
+    state.sections.forEach(s => typeCount[typeMap[s.type] || "正文"] = (typeCount[typeMap[s.type] || "正文"] || 0) + 1);
+    const isMobile = window.matchMedia("(max-width:760px)").matches;
+    const fontSize = isMobile ? 13 : 16;
 
     drawChart("sectionChart", {
-      ...baseOption,
-      title: { text: "篇幅分布", textStyle: { color: textColor, fontSize: 16 } },
-      xAxis: { type: "category", data: secNames, axisLabel: { color: mutedColor } },
-      yAxis: { type: "value", splitLine: { lineStyle: { color: 'rgba(150,150,150,0.1)' } } },
-      series: [{ type: "bar", data: secData, itemStyle: { color: themeBlue, borderRadius: [4,4,0,0] } }]
+      title:{ text:"章节篇幅分布", textStyle:{ color:textColor, fontSize, fontWeight:700 } },
+      tooltip:{ trigger:"axis" },
+      grid:{ left:isMobile?38:44, right:18, top:54, bottom:isMobile?76:64 },
+      xAxis:{ type:"category", data:secNames, axisLabel:{ color:mutedColor, rotate:isMobile?42:28, fontSize:isMobile?10:12 }, axisLine:{ lineStyle:{ color:"rgba(150,150,150,.22)" } } },
+      yAxis:{ type:"value", axisLabel:{ color:mutedColor, fontSize:isMobile?10:12 }, splitLine:{ lineStyle:{ color:"rgba(150,150,150,.12)" } } },
+      series:[{ type:"bar", data:secWords, itemStyle:{ color:blue, borderRadius:[6,6,0,0] }, barWidth:isMobile?"42%":"48%" }]
     });
-    
-    const flowData = secData.map((val, idx) => [idx + 1, val]);
+
+    drawChart("typeChart", {
+      title:{ text:"模块构成", textStyle:{ color:textColor, fontSize, fontWeight:700 } },
+      tooltip:{ trigger:"item" },
+      legend:{ bottom:0, textStyle:{ color:mutedColor, fontSize:isMobile?10:12 } },
+      series:[{ type:"pie", radius:isMobile?["36%","60%"]:["42%","68%"], center:["50%","48%"], label:{ color:textColor, fontSize:isMobile?10:12 }, data:Object.entries(typeCount).map(([name,value])=>({name,value})) }]
+    });
+
     drawChart("flowChart", {
-      ...baseOption,
-      title: { text: "叙事与篇幅推进曲线", textStyle: { color: textColor, fontSize: 16 } },
-      xAxis: { type: "value", splitLine: { show: false } },
-      yAxis: { type: "value", splitLine: { lineStyle: { color: 'rgba(150,150,150,0.1)' } } },
-      series: [{ type: "line", smooth: true, data: flowData, lineStyle: { width: 3, color: themeBlue } }]
+      title:{ text:"阅读叙事推进曲线", subtext:"横轴为章节顺序，纵轴为字数", textStyle:{ color:textColor, fontSize, fontWeight:700 }, subtextStyle:{ color:mutedColor } },
+      tooltip:{ trigger:"axis", formatter:p => `第 ${p[0].data[0]} 部分<br/>${sec[p[0].data[0]-1]?.title || ""}：${p[0].data[1]} 字` },
+      grid:{ left:isMobile?38:44, right:24, top:76, bottom:42 },
+      xAxis:{ type:"value", min:1, max:Math.max(2,sec.length), axisLabel:{ color:mutedColor }, splitLine:{ show:false } },
+      yAxis:{ type:"value", axisLabel:{ color:mutedColor }, splitLine:{ lineStyle:{ color:"rgba(150,150,150,.12)" } } },
+      series:[{ type:"line", smooth:true, symbolSize:isMobile?7:9, data:secWords.map((v,i)=>[i+1,v]), lineStyle:{ width:3, color:green }, itemStyle:{ color:green }, areaStyle:{ color:"rgba(52,199,89,.12)" } }]
     });
+
+    $("mindmap").innerHTML = `<div class="map-wrap">
+      <div class="map-center">${escapeHtml(state.title.slice(0,36))}</div>
+      <div style="font-size:28px;color:${blue}">→</div>
+      <div class="map-cols">${sec.slice(0,12).map(s=>`<div class="map-node"><b>${escapeHtml(s.title)}</b><span>${typeMap[s.type] || "正文"} · ${s.words || 0} 字</span></div>`).join("")}</div>
+    </div>`;
   }
 
-  function drawChart(id, option) {
+  function drawChart(id, option){
     const dom = $(id);
-    if (!dom) return;
-    if (!state.charts[id]) state.charts[id] = echarts.init(dom);
-    state.charts[id].setOption(option);
+    if(!dom) return;
+    if(!state.charts[id]) state.charts[id] = echarts.init(dom);
+    state.charts[id].setOption(option, true);
   }
 
-  // File Handling
-  els.fileInput.addEventListener("change", async e => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
-      const text = await file.text();
-      analyzePaper(text, file.name);
-    } else {
-      toast("前端 Demo 暂只支持直接解析 TXT/MD。你可以点击“载入体验示例”。");
-    }
-  });
+  function switchTab(tab){
+    document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".mobile-bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+    $(`${tab}Panel`).classList.remove("hidden");
+    setTimeout(() => Object.values(state.charts).forEach(c=>c.resize()),120);
+    if(window.matchMedia("(max-width:760px)").matches) window.scrollTo({ top:0, behavior:"smooth" });
+  }
 
-  // Load Custom User Template (Override History)
-  $("loadSampleBtn").onclick = () => {
+  function selectSection(index){
+    state.selectedIndex = index;
+    const sec = state.sections[index];
+    if(!sec) return;
+    els.sectionTitleInput.value = sec.title;
+    els.sectionContentInput.value = sec.content;
+    state.reading[index] = true;
+    renderSidebar();
+    renderWorkspace();
+    switchTab("editor");
+    setTimeout(() => {
+      const target = els.paperEditor.querySelector(`[data-section="${index}"]`);
+      if(target) target.scrollIntoView({ behavior:"smooth", block:"center" });
+    },80);
+  }
+
+  function highlightTerm(term){
+    term = (term || "").trim();
+    if(!term) return toast("请输入关键词。");
+    renderEditor();
+    const walker = document.createTreeWalker(els.paperEditor, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    const reg = new RegExp(escaped,"gi");
+    let count = 0;
+    nodes.forEach(node => {
+      if(reg.test(node.nodeValue)){
+        count++;
+        const span = document.createElement("span");
+        span.innerHTML = escapeHtml(node.nodeValue).replace(new RegExp(escaped,"gi"), m=>`<mark>${escapeHtml(m)}</mark>`);
+        node.parentNode.replaceChild(span,node);
+      }
+    });
+    const first = els.paperEditor.querySelector("mark");
+    if(first) first.scrollIntoView({ behavior:"smooth", block:"center" });
+    toast(count ? `已高亮：${term}` : `未找到：${term}`);
+  }
+
+  function updateCurrentSection(){
+    const idx = state.selectedIndex;
+    if(idx < 0 || !state.sections[idx]) return toast("请先选择章节。");
+    state.sections[idx].title = els.sectionTitleInput.value.trim() || "未命名章节";
+    state.sections[idx].content = els.sectionContentInput.value.trim();
+    state.sections[idx].type = inferSectionType(state.sections[idx].title);
+    state.sections[idx].words = countWords(state.sections[idx].content);
+    const merged = [state.title, ...state.sections.slice(1).map(s=>`${s.title}\n${s.content}`)].join("\n\n");
+    analyzePaper(merged, state.fileName);
+    selectSection(idx);
+  }
+
+  function reAnalyzeFromEditor(){
+    const title = els.paperEditor.querySelector("h1")?.innerText || state.title;
+    const sections = [...els.paperEditor.querySelectorAll("section")].map(sec => {
+      const h = sec.querySelector("h2")?.innerText || "未命名章节";
+      const ps = [...sec.querySelectorAll("p")].map(p=>p.innerText).join("\n");
+      return `${h}\n${ps}`;
+    }).join("\n\n");
+    analyzePaper(`${title}\n\n${sections}`, state.fileName);
+  }
+
+  function answerQuestion(q){
+    q = (q || "").trim();
+    if(!q) return toast("请输入问题。");
+    const terms = q.match(/[\u4e00-\u9fa5]{2,}|[A-Za-z]{3,}/g) || [];
+    const paras = normalizeText(state.rawText).split(/\n{1,}|。/).map(x=>x.trim()).filter(x=>x.length>18 && x.length<300);
+    const ranked = paras.map(p => ({ p, score: terms.reduce((n,t)=>n + (p.toLowerCase().includes(t.toLowerCase()) ? 1 : 0),0) }))
+      .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
+    const fallback = [state.quick.problem,state.quick.method,state.quick.result,state.quick.contribution,state.quick.limitation].filter(Boolean).map(p=>({p,score:1})).slice(0,5);
+    const results = ranked.length ? ranked : fallback;
+    $("qaResult").innerHTML = results.map((x,i)=>`<div class="list-item"><b>可能答案 ${i+1}</b><br>${escapeHtml(x.p)}</div>`).join("");
+  }
+
+  function makeReaderNote(){
+    return `# ${state.title}｜论文阅读笔记
+
+## 摘要
+${state.abstract}
+
+## 论文七问
+1. 研究对象：${state.seven.what || ""}
+2. 研究价值：${state.seven.why || ""}
+3. 研究方法：${state.seven.how || ""}
+4. 数据材料：${state.seven.data || ""}
+5. 核心结论：${state.seven.result || ""}
+6. 创新价值：${state.seven.new || ""}
+7. 局限展望：${state.seven.limit || ""}
+
+## 关键词
+${state.keywords.join("、")}
+
+## 关键句
+${state.keySentences.map((s,i)=>`${i+1}. ${s}`).join("\n")}
+
+## 修改建议
+${state.improvements.map((s,i)=>`${i+1}. ${s}`).join("\n")}
+
+## 答辩陈述
+${(state.defense.speech || []).map((s,i)=>`${i+1}. ${s}`).join("\n")}
+
+## 我的笔记
+${state.notes.map((s,i)=>`${i+1}. ${s}`).join("\n") || "暂无笔记。"}
+`;
+  }
+  function downloadText(filename,text,type="text/plain;charset=utf-8"){
+    const blob = new Blob([text], { type });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function exportMarkdown(){
+    if(!state.sections.length) return toast("暂无可导出的全文。");
+    const md = [`# ${state.title}`, ...state.sections.slice(1).map(s=>`\n## ${s.title}\n\n${s.content}`)].join("\n\n");
+    downloadText(`${state.title.slice(0,24) || "paper"}-全文.md`, md, "text/markdown;charset=utf-8");
+  }
+  function exportJson(){
+    const data = {
+      title: state.title,
+      stats: state.stats,
+      documents: state.documents.map(d=>({ name:d.name, ext:d.ext, words:d.words, status:d.status })),
+      abstract: state.abstract,
+      keywords: state.keywords,
+      terms: state.terms,
+      figures: state.figures,
+      references: state.references,
+      keySentences: state.keySentences,
+      quick: state.quick,
+      seven: state.seven,
+      scores: state.scores,
+      improvements: state.improvements,
+      defense: state.defense,
+      notes: state.notes,
+      bookmarks: state.bookmarks,
+      sections: state.sections
+    };
+    downloadText(`${state.title.slice(0,24) || "paper"}-analysis.json`, JSON.stringify(data,null,2), "application/json;charset=utf-8");
+  }
+  async function copyNote(){
+    await navigator.clipboard.writeText(makeReaderNote());
+    toast("已复制阅读笔记。");
+  }
+  function saveLocal(){
+    try{
+      localStorage.setItem("paperReaderLabPro", JSON.stringify({
+        documents: state.documents,
+        rawText: state.rawText,
+        fileName: state.fileName,
+        notes: state.notes,
+        bookmarks: state.bookmarks,
+        reading: state.reading
+      }));
+    }catch(e){}
+  }
+  function loadLocal(){
+    try{
+      const saved = JSON.parse(localStorage.getItem("paperReaderLabPro") || "{}");
+      if(saved.rawText){
+        state.documents = saved.documents || [];
+        state.notes = saved.notes || [];
+        state.bookmarks = saved.bookmarks || [];
+        state.reading = saved.reading || {};
+        analyzePaper(saved.rawText, saved.fileName || "本地缓存");
+      }
+    }catch(e){}
+  }
+  function clearAll(){
+    localStorage.removeItem("paperReaderLabPro");
+    location.reload();
+  }
+  function loadSample(){
+    const sampleFile = { name:"示例论文.txt", size:2048 };
+    preRenderFileQueue([sampleFile]);
+    updateFileStatus("示例论文.txt", "已读取", "ok");
+    state.documents = [{ name:"示例论文.txt", ext:"txt", size:2048, status:"ok", words:0, text:"" }];
     const sample = `
-基于 AI 驱动的跨境电商个性化定制体验研究
-
-作者：LEO XU
+基于用户体验下的虚拟空间交互设计——以江汉大学校史馆为例
 
 摘要
-随着大语言模型和生成式 AI 技术的发展，跨境电商的商品定制方式正在从标准化生产转向智能化、个性化设计。本文围绕用户体验、AI 生成工作流和电商转化率展开研究，尝试构建一个允许海外用户利用 AI 定制日常用品（如专属设计的外设、日用品等）的交互原型。研究通过竞品案例研究、API 调用测试和用户访谈总结用户需求，并以此提出 AI 驱动的极简界面交互设计策略。结果表明，极简的提示词引导、实时的 3D 可视化预览和流畅的生成反馈能够显著提升用户的定制意愿和购买转化率。
+随着数字媒体技术、虚拟现实技术和交互设计方法的发展，高校校史馆的展示方式正在从静态陈列转向沉浸式、交互式与数据化表达。本文以江汉大学校史馆为研究对象，围绕用户体验、信息架构、空间叙事和交互流程展开研究，尝试构建一个可浏览、可搜索、可互动的虚拟校史馆原型。研究通过文献分析、竞品案例研究、问卷调查和用户访谈总结用户需求，并以此提出虚拟校史馆的信息架构与交互设计策略。结果表明，清晰的时间轴导航、热点弹窗、搜索检索和场景化叙事能够提升用户的信息查找效率和沉浸体验。
 
-第一章 引言
-传统电商的定制流程繁琐且缺乏直观反馈。结合最新的人工智能接口，将设计权交还给用户成为了可能。
+关键词
+用户体验、虚拟空间、交互设计、校史馆、信息可视化
 
-第二章 理论基础
-探究了心智模型与机器生成的不确定性之间的平衡点。
+第一章 绪论
+高校校史馆承担着传播学校历史、凝聚校园文化、展示办学成果的重要功能。传统校史馆在空间距离、参观时间、信息层级和互动体验方面存在限制，难以满足新一代用户对数字化、沉浸式和个性化体验的需求。本文主要解决传统校史馆信息获取效率低、参观路径单一和文化记忆点不足的问题。
 
-第三章 研究方法
-采用原型测试法，搭建基于 Vercel 与前端 AI 工作流的演示环境，邀请 50 名受众进行深度访谈。
+第二章 理论基础与文献综述
+用户体验理论强调可用性、情感体验、任务效率与持续参与。虚拟空间设计则关注空间结构、视觉引导、交互反馈和叙事路径。国内外关于数字博物馆、虚拟展厅和校园文化展示的研究，为本文提供了理论依据。
 
-第四章 结果分析
-系统响应时间和视觉产出的稳定性是决定留存率的关键因素。
+第三章 研究方法与用户需求分析
+本文采用文献研究、案例分析、问卷调查和半结构化访谈方法。问卷围绕参观动机、信息查找方式、互动偏好和视觉风格展开。访谈对象包括在校学生、校友和教师。调研显示，用户更关注清晰的时间轴导航、人物与事件检索、重要成果可视化、沉浸式漫游以及轻量化互动问答。
+
+第四章 信息架构与交互流程设计
+系统首页包括校史时间轴、历史事件、代表人物、荣誉成果、VR漫游入口、互动问答和搜索模块。交互流程分为首次访问流程、时间轴浏览流程、关键词搜索流程和互动体验流程。图1 信息架构图展示了系统模块关系。表1 用户需求分类表总结了核心需求。
+
+第五章 虚拟空间视觉与原型实践
+原型采用现代化深色界面、蓝色科技感视觉语言和模块化信息卡片。虚拟空间中设置入口大厅、历史长廊、人物展区、荣誉展区和未来展望区。用户可通过点击热点、触发弹窗、播放视频和切换视角完成交互体验。
+
+第六章 可用性测试与结果分析
+测试结果显示，优化后的虚拟校史馆在信息查找效率、导航清晰度、沉浸感和整体满意度方面均有提升。用户普遍认为时间轴和搜索功能能够有效帮助理解学校发展脉络，但部分用户希望增加语音导览和个性化推荐功能。
 
 结论
-AI 赋能的电商定制极大地缩短了决策路径，但需通过严谨的 UI 设计去消除 AI 的“黑盒感”。
-`;
-    analyzePaper(sample, "基于AI驱动的跨境电商个性化定制体验研究.txt");
-  };
+本文从用户体验视角出发，构建了高校校史馆虚拟空间交互设计方案。研究表明，清晰的信息架构、场景化叙事和及时交互反馈能够提升数字校史馆的可用性和文化传播效果。本文的创新点在于将用户体验研究、虚拟空间叙事和信息可视化结合，用于高校校史馆数字化展示。研究不足在于样本数量有限，后续可进一步结合 AI 问答、知识图谱和多端适配，提升系统智能化水平。
 
-  // Tabs
-  document.querySelectorAll(".nav button").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
-      $(`${btn.dataset.tab}Panel`).classList.remove("hidden");
-      setTimeout(() => Object.values(state.charts).forEach(c => c.resize()), 100);
-    };
+参考文献
+[1] Norman D. The Design of Everyday Things.
+[2] Garrett J. The Elements of User Experience.
+[3] 王某某. 数字博物馆交互设计研究.
+[4] 李某某. 虚拟现实技术在高校文化展示中的应用.
+[5] 张某某. 用户体验视角下的信息架构设计.
+[6] 陈某某. 信息可视化在文化展示中的应用.
+`;
+    state.documents[0].text = sample;
+    state.documents[0].words = countWords(sample);
+    analyzePaper(sample, "示例论文.txt");
+  }
+
+  function setDeviceMode(){
+    const mobile = window.matchMedia("(max-width:760px)").matches;
+    $("deviceLabel").textContent = mobile ? "Mobile Auto" : "Responsive Pro";
+    Object.values(state.charts).forEach(c => c.resize());
+  }
+
+  // Events
+  els.fileInput.addEventListener("change", e => handleFiles(e.target.files));
+  ["dragenter","dragover"].forEach(evt => els.dropzone.addEventListener(evt, e => { e.preventDefault(); els.dropzone.classList.add("dragover"); }));
+  ["dragleave","drop"].forEach(evt => els.dropzone.addEventListener(evt, e => { e.preventDefault(); els.dropzone.classList.remove("dragover"); }));
+  els.dropzone.addEventListener("drop", e => { e.preventDefault(); handleFiles(e.dataTransfer.files); });
+
+  document.querySelectorAll(".nav button").forEach(btn => btn.onclick = () => switchTab(btn.dataset.tab));
+  document.querySelectorAll(".mobile-bottom-nav button").forEach(btn => btn.onclick = () => switchTab(btn.dataset.tab));
+  document.querySelectorAll("#summaryModes button").forEach(btn => btn.onclick = () => {
+    state.summaryMode = btn.dataset.mode;
+    document.querySelectorAll("#summaryModes button").forEach(b => b.classList.toggle("active", b === btn));
+    renderReader();
   });
 
-  $("clearBtn").onclick = () => location.reload();
-  
-  // Drag and Drop Effects
-  ["dragenter", "dragover"].forEach(evt => els.dropzone.addEventListener(evt, e => {
-    e.preventDefault(); els.dropzone.classList.add("dragover");
-  }));
-  ["dragleave", "drop"].forEach(evt => els.dropzone.addEventListener(evt, e => {
-    e.preventDefault(); els.dropzone.classList.remove("dragover");
-  }));
-  
+  $("searchInput").addEventListener("keydown", e => { if(e.key === "Enter"){ switchTab("editor"); highlightTerm(e.target.value); } });
+  $("globalSearchBtn").onclick = () => { switchTab("editor"); highlightTerm($("globalSearch").value); };
+  $("globalSearch").addEventListener("keydown", e => { if(e.key === "Enter"){ switchTab("editor"); highlightTerm(e.target.value); } });
+  $("loadSampleBtn").onclick = loadSample;
+  $("clearBtn").onclick = clearAll;
+  $("exportNoteBtn").onclick = () => downloadText(`${state.title.slice(0,24) || "paper"}-阅读笔记.md`, makeReaderNote(), "text/markdown;charset=utf-8");
+  $("exportMdBtn").onclick = exportMarkdown;
+  $("exportJsonBtn").onclick = exportJson;
+  $("copyNoteBtn").onclick = copyNote;
+  $("updateSectionBtn").onclick = updateCurrentSection;
+  $("reanalyzeBtn").onclick = reAnalyzeFromEditor;
+  $("qaBtn").onclick = () => answerQuestion($("qaInput").value);
+  $("qaInput").addEventListener("keydown", e => { if(e.key === "Enter") answerQuestion(e.target.value); });
+  $("addNoteBtn").onclick = () => {
+    const v = $("noteInput").value.trim();
+    if(!v) return toast("请输入笔记内容。");
+    state.notes.unshift(v);
+    $("noteInput").value = "";
+    renderWorkspace();
+    saveLocal();
+  };
+  $("clearNotesBtn").onclick = () => {
+    state.notes = [];
+    renderWorkspace();
+    saveLocal();
+  };
+  $("bookmarkBtn").onclick = () => {
+    if(state.selectedIndex < 0 || !state.sections[state.selectedIndex]) return toast("请先选择章节。");
+    const s = state.sections[state.selectedIndex];
+    if(!state.bookmarks.some(b => b.index === state.selectedIndex)) state.bookmarks.push({ index:state.selectedIndex, title:s.title, words:s.words });
+    renderWorkspace();
+    saveLocal();
+    toast("已加入书签。");
+  };
+  $("focusBtn").onclick = () => {
+    document.body.classList.toggle("reading-focus");
+    toast(document.body.classList.contains("reading-focus") ? "已进入专注阅读模式。" : "已退出专注阅读模式。");
+  };
+  $("themeBtn").onclick = () => {
+    if(document.body.classList.contains("dark")){
+      document.body.classList.remove("dark");
+      document.body.classList.add("light");
+    }else{
+      document.body.classList.remove("light");
+      document.body.classList.add("dark");
+    }
+    renderCharts();
+  };
+  $("topBtn").onclick = () => window.scrollTo({ top:0, behavior:"smooth" });
+  $("mobileUploadBtn").onclick = () => els.fileInput.click();
+
+  window.addEventListener("resize", () => { setDeviceMode(); renderCharts(); });
+  window.addEventListener("orientationchange", () => setTimeout(() => { setDeviceMode(); renderCharts(); }, 360));
+
+  loadLocal();
+  setDeviceMode();
 </script>
 </body>
 </html>
